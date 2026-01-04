@@ -1,0 +1,108 @@
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.card:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-dim);
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.info {
+  min-width: 0;
+  flex: 1;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+
+.name {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.subLocation {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.category {
+  color: var(--text-muted);
+}
+
+.dot {
+  color: var(--text-muted);
+}
+
+.dateLine {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  padding: 8px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+}
+
+.actionBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.removeBtn:hover {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--danger);
+}
