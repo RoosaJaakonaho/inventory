@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './lib/auth'
 import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
+import MainLayout from './pages/MainLayout'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -12,7 +13,8 @@ function PrivateRoute({ children }) {
         minHeight: '100vh', 
         display: 'flex', 
         alignItems: 'center', 
-        justifyContent: 'center' 
+        justifyContent: 'center',
+        background: '#0d0d0d'
       }}>
         <div style={{
           width: 32,
@@ -47,12 +49,11 @@ function AppRoutes() {
           <Login />
         </PublicRoute>
       } />
-      <Route path="/" element={
+      <Route path="/*" element={
         <PrivateRoute>
-          <Dashboard />
+          <MainLayout />
         </PrivateRoute>
       } />
-      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   )
 }

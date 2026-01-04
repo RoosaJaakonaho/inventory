@@ -1,0 +1,149 @@
+.detailModal {
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.categoryIcon {
+  font-size: 2rem;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.categoryName {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.content {
+  padding: 16px;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.selectAllBtn {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-decoration: underline;
+}
+
+.selectAllBtn:hover {
+  color: var(--text-primary);
+}
+
+.instructions {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.ingredientsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ingredientItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ingredientItem:hover {
+  background: var(--bg-hover);
+}
+
+.ingredientItem.selected {
+  border-color: var(--success);
+  background: rgba(81, 207, 102, 0.1);
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.ingredientItem.selected .checkbox {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--bg-primary);
+}
+
+.ingIcon {
+  font-size: 1.125rem;
+}
+
+.ingName {
+  flex: 1;
+  font-size: 0.9375rem;
+}
+
+.ingAmount {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.addToList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.successMessage {
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(81, 207, 102, 0.15);
+  border-radius: var(--radius-md);
+  color: var(--success);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.footer {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}

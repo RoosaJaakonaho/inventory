@@ -4,14 +4,14 @@ import {
   SUB_LOCATIONS,
   CATEGORIES,
   getCategoryById, 
-  getSubLocationById,
   getSubLocationFromCategory,
   isInFreezer,
+  calculateFreezerExpiry,
 } from '../lib/supabase'
 import AddShoppingItemModal from '../components/AddShoppingItemModal'
 import styles from './ShoppingList.module.css'
 
-export default function ShoppingList({ locationId, onItemsAdded }) {
+export default function ShoppingList({ locationType, onItemsAdded }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -19,16 +19,14 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
   const [finishing, setFinishing] = useState(false)
 
   useEffect(() => {
-    if (locationId) {
-      fetchItems()
-    }
-  }, [locationId])
+    fetchItems()
+  }, [locationType])
 
   const fetchItems = async () => {
     const { data, error } = await supabase
       .from('shopping_list')
       .select('*')
-      .eq('location_id', locationId)
+      .eq('location_type', locationType)
       .order('created_at', { ascending: true })
 
     if (error) {
@@ -45,7 +43,7 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
       .from('shopping_list')
       .insert([{
         ...itemData,
-        location_id: locationId,
+        location_type: locationType,
         checked: false,
       }])
 
@@ -111,8 +109,8 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
     setFinishing(true)
 
     for (const item of checkedItems) {
-      // Skip käyttötavara - just remove from list, don't add to inventory
-      if (item.is_kayttotavara) {
+      // Skip non-inventory items - just remove from list
+      if (item.is_non_inventory) {
         await supabase
           .from('shopping_list')
           .delete()
@@ -123,17 +121,16 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
       // Add food items to inventory
       const inFreezer = isInFreezer(item.category)
       
-      const { data: newItem, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('items')
         .insert([{
-          location_id: locationId,
+          location_type: locationType,
           name: item.name,
           category: item.category,
           weight: item.weight,
-          expiry_date: inFreezer ? null : null,
+          expiry_date: inFreezer ? null : (item.expiry_date || null),
+          frozen_date: inFreezer ? (item.frozen_date || new Date().toISOString().split('T')[0]) : null,
         }])
-        .select()
-        .single()
 
       if (insertError) {
         console.error('Error adding item to inventory:', insertError)
@@ -153,13 +150,14 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
   }
 
   const checkedCount = items.filter(i => i.checked).length
+  const subLocations = SUB_LOCATIONS[locationType] || []
 
-  // Separate käyttötavara and food items
-  const kayttotavaraItems = items.filter(item => item.is_kayttotavara)
-  const foodItems = items.filter(item => !item.is_kayttotavara)
+  // Separate non-inventory and food items
+  const nonInventoryItems = items.filter(item => item.is_non_inventory)
+  const foodItems = items.filter(item => !item.is_non_inventory)
 
   // Group food items by sub-location
-  const groupedFoodItems = SUB_LOCATIONS.map(sub => ({
+  const groupedFoodItems = subLocations.map(sub => ({
     ...sub,
     items: foodItems.filter(item => getSubLocationFromCategory(item.category) === sub.id)
   })).filter(group => group.items.length > 0)
@@ -248,13 +246,13 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
               </div>
             ))}
 
-            {/* Käyttötavara items */}
-            {kayttotavaraItems.length > 0 && (
+            {/* Non-inventory items */}
+            {nonInventoryItems.length > 0 && (
               <div className={styles.group}>
                 <h3 className={styles.groupTitle}>
-                  🧹 Käyttötavara
+                  🚫 Ei inventaarioon
                 </h3>
-                {kayttotavaraItems.map(item => (
+                {nonInventoryItems.map(item => (
                   <div 
                     key={item.id} 
                     className={`${styles.item} ${item.checked ? styles.checked : ''}`}
@@ -333,6 +331,7 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
       {showAddModal && (
         <AddShoppingItemModal
           item={editingItem}
+          locationType={locationType}
           onClose={() => {
             setShowAddModal(false)
             setEditingItem(null)

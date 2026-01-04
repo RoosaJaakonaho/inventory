@@ -1,53 +1,74 @@
 import { useState, useEffect } from 'react'
-import { SUB_LOCATIONS, CATEGORIES, getSubLocationFromCategory } from '../lib/supabase'
+import { SUB_LOCATIONS, CATEGORIES, getSubLocationFromCategory, isInFreezer, isSpice } from '../lib/supabase'
 import styles from './Modal.module.css'
 
-export default function AddShoppingItemModal({ item, onClose, onSave }) {
+export default function AddShoppingItemModal({ item, locationType, onClose, onSave }) {
   const [name, setName] = useState('')
   const [weight, setWeight] = useState('')
-  const [subLocation, setSubLocation] = useState('pakastin')
-  const [category, setCategory] = useState('pakastin_kana')
-  const [isKayttotavara, setIsKayttotavara] = useState(false)
+  const [subLocation, setSubLocation] = useState('')
+  const [category, setCategory] = useState('')
+  const [expiryDate, setExpiryDate] = useState('')
+  const [frozenDate, setFrozenDate] = useState('')
+  const [isNonInventory, setIsNonInventory] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  const subLocations = SUB_LOCATIONS[locationType] || []
 
   useEffect(() => {
     if (item) {
       setName(item.name || '')
       setWeight(item.weight || '')
-      setIsKayttotavara(item.is_kayttotavara || false)
-      if (!item.is_kayttotavara && item.category) {
+      setIsNonInventory(item.is_non_inventory || false)
+      setExpiryDate(item.expiry_date || '')
+      setFrozenDate(item.frozen_date || '')
+      if (!item.is_non_inventory && item.category) {
         const itemSubLocation = getSubLocationFromCategory(item.category)
-        setSubLocation(itemSubLocation)
+        setSubLocation(itemSubLocation || subLocations[0]?.id || '')
         setCategory(item.category)
+      } else {
+        setSubLocation(subLocations[0]?.id || '')
+        setCategory(CATEGORIES[subLocations[0]?.id]?.[0]?.id || '')
+      }
+    } else {
+      const defaultSub = subLocations[0]?.id || ''
+      setSubLocation(defaultSub)
+      if (defaultSub && CATEGORIES[defaultSub]) {
+        setCategory(CATEGORIES[defaultSub][0]?.id || '')
       }
     }
-  }, [item])
+  }, [item, locationType])
 
-  // When sub-location changes, reset category to first option (only for new items)
+  // When sub-location changes, reset category
   useEffect(() => {
-    if (!item && !isKayttotavara) {
-      const firstCategory = CATEGORIES[subLocation]?.[0]?.id || ''
-      setCategory(firstCategory)
+    if (!item && !isNonInventory && subLocation && CATEGORIES[subLocation]) {
+      setCategory(CATEGORIES[subLocation][0]?.id || '')
     }
-  }, [subLocation, item, isKayttotavara])
+  }, [subLocation, item, isNonInventory])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
 
-    if (isKayttotavara) {
+    if (isNonInventory) {
       await onSave({
         name: name.trim(),
         weight: null,
         category: null,
-        is_kayttotavara: true,
+        expiry_date: null,
+        frozen_date: null,
+        is_non_inventory: true,
       })
     } else {
+      const inFreezer = isInFreezer(category)
+      const isSpiceItem = isSpice(category)
+      
       await onSave({
         name: name.trim(),
         weight: weight.trim() || null,
         category,
-        is_kayttotavara: false,
+        expiry_date: (inFreezer || isSpiceItem) ? null : (expiryDate || null),
+        frozen_date: inFreezer ? (frozenDate || null) : null,
+        is_non_inventory: false,
       })
     }
 
@@ -56,6 +77,10 @@ export default function AddShoppingItemModal({ item, onClose, onSave }) {
 
   const currentCategories = CATEGORIES[subLocation] || []
   const isEditing = !!item
+  const inFreezer = !isNonInventory && isInFreezer(category)
+  const isSpiceItem = !isNonInventory && isSpice(category)
+  const showExpiryDate = !isNonInventory && !inFreezer && !isSpiceItem
+  const showFrozenDate = !isNonInventory && inFreezer
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -71,15 +96,15 @@ export default function AddShoppingItemModal({ item, onClose, onSave }) {
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Käyttötavara toggle */}
+          {/* Non-inventory toggle */}
           <label className={styles.toggle}>
             <input
               type="checkbox"
-              checked={isKayttotavara}
-              onChange={(e) => setIsKayttotavara(e.target.checked)}
+              checked={isNonInventory}
+              onChange={(e) => setIsNonInventory(e.target.checked)}
             />
             <span className={styles.toggleSlider}></span>
-            <span className={styles.toggleLabel}>Käyttötavara</span>
+            <span className={styles.toggleLabel}>Ei inventaarioon</span>
           </label>
 
           <div className={styles.field}>
@@ -90,13 +115,13 @@ export default function AddShoppingItemModal({ item, onClose, onSave }) {
               className="input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={isKayttotavara ? "esim. Tiskiharja" : "esim. Kanafile"}
+              placeholder={isNonInventory ? "esim. Tiskiharja" : "esim. Kanafile"}
               required
               autoFocus
             />
           </div>
 
-          {!isKayttotavara && (
+          {!isNonInventory && (
             <>
               <div className={styles.field}>
                 <label className="label" htmlFor="subLocation">Säilytyspaikka</label>
@@ -106,7 +131,7 @@ export default function AddShoppingItemModal({ item, onClose, onSave }) {
                   value={subLocation}
                   onChange={(e) => setSubLocation(e.target.value)}
                 >
-                  {SUB_LOCATIONS.map(sub => (
+                  {subLocations.map(sub => (
                     <option key={sub.id} value={sub.id}>
                       {sub.icon} {sub.name}
                     </option>
@@ -141,6 +166,38 @@ export default function AddShoppingItemModal({ item, onClose, onSave }) {
                   placeholder="esim. 500g"
                 />
               </div>
+
+              {showFrozenDate && (
+                <div className={styles.field}>
+                  <label className="label" htmlFor="frozenDate">Pakastuspäivä (valinnainen)</label>
+                  <input
+                    id="frozenDate"
+                    type="date"
+                    className="input"
+                    value={frozenDate}
+                    onChange={(e) => setFrozenDate(e.target.value)}
+                  />
+                  <p className={styles.hint}>
+                    🧊 Voit lisätä pakastuspäivän kaupassa tai jättää tyhjäksi
+                  </p>
+                </div>
+              )}
+
+              {showExpiryDate && (
+                <div className={styles.field}>
+                  <label className="label" htmlFor="expiry">Parasta ennen (valinnainen)</label>
+                  <input
+                    id="expiry"
+                    type="date"
+                    className="input"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                  />
+                  <p className={styles.hint}>
+                    📅 Voit lisätä päiväyksen kaupassa tai jättää tyhjäksi
+                  </p>
+                </div>
+              )}
             </>
           )}
 

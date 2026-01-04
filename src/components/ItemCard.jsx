@@ -1,26 +1,27 @@
-import { getCategoryById, getSubLocationById, getSubLocationFromCategory, isInFreezer, formatDate, getExpiryStatus, getDaysUntilExpiry } from '../lib/supabase'
+import { getCategoryById, getSubLocationById, getSubLocationFromCategory, isInFreezer, isSpice, formatDate, getExpiryStatus, getDaysUntilExpiry } from '../lib/supabase'
 import styles from './ItemCard.module.css'
 
-export default function ItemCard({ item, onEdit, onRemove }) {
+export default function ItemCard({ item, expiryDate, onEdit, onDelete }) {
   const category = getCategoryById(item.category)
   const subLocationId = getSubLocationFromCategory(item.category)
   const subLocation = getSubLocationById(subLocationId)
   const inFreezer = isInFreezer(item.category)
+  const isSpiceItem = isSpice(item.category)
   
-  const expiryStatus = inFreezer ? null : getExpiryStatus(item.expiry_date)
-  const daysUntil = inFreezer ? null : getDaysUntilExpiry(item.expiry_date)
+  const expiryStatus = expiryDate ? getExpiryStatus(expiryDate) : null
+  const daysUntil = expiryDate ? getDaysUntilExpiry(expiryDate) : null
 
   const getExpiryLabel = () => {
-    if (inFreezer) return null
     if (daysUntil === null) return null
     if (daysUntil < 0) return `Vanhentunut ${Math.abs(daysUntil)} pv sitten`
     if (daysUntil === 0) return 'Vanhenee tänään'
     if (daysUntil === 1) return 'Vanhenee huomenna'
-    if (daysUntil <= 7) return `Vanhenee ${daysUntil} pv`
+    if (daysUntil <= 21) return `Vanhenee ${daysUntil} pv`
     return null
   }
 
   const expiryLabel = getExpiryLabel()
+  const needsDate = !isSpiceItem && !expiryDate && (!inFreezer || !item.frozen_date)
 
   return (
     <div className={`${styles.card} animate-slide-up`}>
@@ -30,9 +31,12 @@ export default function ItemCard({ item, onEdit, onRemove }) {
           <div className={styles.header}>
             <h3 className={styles.name}>{item.name}</h3>
             {expiryLabel && (
-              <span className={`badge ${expiryStatus === 'expired' ? 'badge-danger' : expiryStatus === 'critical' ? 'badge-danger' : 'badge-warning'}`}>
+              <span className={`badge ${expiryStatus === 'expired' || expiryStatus === 'critical' ? 'badge-danger' : 'badge-warning'}`}>
                 {expiryLabel}
               </span>
+            )}
+            {needsDate && (
+              <span className="badge badge-warning">Lisää päiväys</span>
             )}
           </div>
           <div className={styles.meta}>
@@ -47,10 +51,10 @@ export default function ItemCard({ item, onEdit, onRemove }) {
             )}
           </div>
           <div className={styles.dateLine}>
-            {inFreezer ? (
-              <span>Lisätty: {formatDate(item.created_at)}</span>
-            ) : item.expiry_date ? (
-              <span>Parasta ennen: {formatDate(item.expiry_date)}</span>
+            {inFreezer && item.frozen_date ? (
+              <span>Pakastettu: {formatDate(item.frozen_date)}</span>
+            ) : !isSpiceItem && expiryDate ? (
+              <span>Parasta ennen: {formatDate(expiryDate)}</span>
             ) : null}
           </div>
         </div>
@@ -68,7 +72,7 @@ export default function ItemCard({ item, onEdit, onRemove }) {
         </button>
         <button 
           className={`${styles.actionBtn} ${styles.removeBtn}`}
-          onClick={onRemove}
+          onClick={onDelete}
           title="Poista"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

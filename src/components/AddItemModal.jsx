@@ -1,31 +1,41 @@
 import { useState, useEffect } from 'react'
-import { SUB_LOCATIONS, CATEGORIES, isInFreezer, getSubLocationFromCategory } from '../lib/supabase'
+import { SUB_LOCATIONS, CATEGORIES, isInFreezer, isSpice, getSubLocationFromCategory } from '../lib/supabase'
 import styles from './Modal.module.css'
 
-export default function AddItemModal({ item, onClose, onSave }) {
+export default function AddItemModal({ item, locationType, onClose, onSave }) {
   const [name, setName] = useState('')
   const [weight, setWeight] = useState('')
-  const [subLocation, setSubLocation] = useState('pakastin')
-  const [category, setCategory] = useState('pakastin_kana')
+  const [subLocation, setSubLocation] = useState('')
+  const [category, setCategory] = useState('')
   const [expiryDate, setExpiryDate] = useState('')
+  const [frozenDate, setFrozenDate] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const subLocations = SUB_LOCATIONS[locationType] || []
 
   useEffect(() => {
     if (item) {
       setName(item.name || '')
       setWeight(item.weight || '')
       const itemSubLocation = getSubLocationFromCategory(item.category)
-      setSubLocation(itemSubLocation)
-      setCategory(item.category || CATEGORIES[itemSubLocation][0].id)
+      setSubLocation(itemSubLocation || subLocations[0]?.id || '')
+      setCategory(item.category || '')
       setExpiryDate(item.expiry_date || '')
+      setFrozenDate(item.frozen_date || '')
+    } else {
+      // Default to first sub-location
+      const defaultSub = subLocations[0]?.id || ''
+      setSubLocation(defaultSub)
+      if (defaultSub && CATEGORIES[defaultSub]) {
+        setCategory(CATEGORIES[defaultSub][0]?.id || '')
+      }
     }
-  }, [item])
+  }, [item, locationType])
 
-  // When sub-location changes, reset category to first option
+  // When sub-location changes, reset category
   useEffect(() => {
-    if (!item) {
-      const firstCategory = CATEGORIES[subLocation]?.[0]?.id || ''
-      setCategory(firstCategory)
+    if (!item && subLocation && CATEGORIES[subLocation]) {
+      setCategory(CATEGORIES[subLocation][0]?.id || '')
     }
   }, [subLocation, item])
 
@@ -34,21 +44,25 @@ export default function AddItemModal({ item, onClose, onSave }) {
     setLoading(true)
 
     const inFreezer = isInFreezer(category)
+    const isSpiceItem = isSpice(category)
 
     await onSave({
       name: name.trim(),
       weight: weight.trim() || null,
       category,
-      // Don't save expiry date for freezer items
-      expiry_date: inFreezer ? null : (expiryDate || null),
+      expiry_date: (inFreezer || isSpiceItem) ? null : (expiryDate || null),
+      frozen_date: inFreezer ? (frozenDate || new Date().toISOString().split('T')[0]) : null,
     })
 
     setLoading(false)
   }
 
-  const isEditing = !!item
   const currentCategories = CATEGORIES[subLocation] || []
-  const showExpiryDate = !isInFreezer(category)
+  const isEditing = !!item
+  const inFreezer = isInFreezer(category)
+  const isSpiceItem = isSpice(category)
+  const showExpiryDate = !inFreezer && !isSpiceItem
+  const showFrozenDate = inFreezer
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -86,7 +100,7 @@ export default function AddItemModal({ item, onClose, onSave }) {
               value={subLocation}
               onChange={(e) => setSubLocation(e.target.value)}
             >
-              {SUB_LOCATIONS.map(sub => (
+              {subLocations.map(sub => (
                 <option key={sub.id} value={sub.id}>
                   {sub.icon} {sub.name}
                 </option>
@@ -110,36 +124,50 @@ export default function AddItemModal({ item, onClose, onSave }) {
             </select>
           </div>
 
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label className="label" htmlFor="weight">Paino</label>
-              <input
-                id="weight"
-                type="text"
-                className="input"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                placeholder="esim. 500g"
-              />
-            </div>
-
-            {showExpiryDate && (
-              <div className={styles.field}>
-                <label className="label" htmlFor="expiry">Parasta ennen</label>
-                <input
-                  id="expiry"
-                  type="date"
-                  className="input"
-                  value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)}
-                />
-              </div>
-            )}
+          <div className={styles.field}>
+            <label className="label" htmlFor="weight">Paino</label>
+            <input
+              id="weight"
+              type="text"
+              className="input"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              placeholder="esim. 500g"
+            />
           </div>
 
-          {!showExpiryDate && (
+          {showFrozenDate && (
+            <div className={styles.field}>
+              <label className="label" htmlFor="frozenDate">Pakastuspäivä</label>
+              <input
+                id="frozenDate"
+                type="date"
+                className="input"
+                value={frozenDate}
+                onChange={(e) => setFrozenDate(e.target.value)}
+              />
+              <p className={styles.hint}>
+                🧊 Vanhentuminen lasketaan automaattisesti pakastuspäivästä
+              </p>
+            </div>
+          )}
+
+          {showExpiryDate && (
+            <div className={styles.field}>
+              <label className="label" htmlFor="expiry">Parasta ennen</label>
+              <input
+                id="expiry"
+                type="date"
+                className="input"
+                value={expiryDate}
+                onChange={(e) => setExpiryDate(e.target.value)}
+              />
+            </div>
+          )}
+
+          {isSpiceItem && (
             <p className={styles.hint}>
-              🧊 Pakastimen tuotteille ei tarvita parasta ennen -päivää. Lisäyspäivä tallennetaan automaattisesti.
+              🧂 Mausteille ei tarvita parasta ennen -päiväystä
             </p>
           )}
 

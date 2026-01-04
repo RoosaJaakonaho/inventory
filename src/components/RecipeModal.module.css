@@ -1,0 +1,85 @@
+.recipeModal {
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.form {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.ingredientsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ingredientsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ingredientItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.ingredientIcon {
+  font-size: 1rem;
+}
+
+.ingredientName {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+.ingredientAmount {
+  color: var(--text-muted);
+}
+
+.removeIngBtn {
+  padding: 4px;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+}
+
+.removeIngBtn:hover {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--danger);
+}
+
+.addIngredient {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.ingRow {
+  display: flex;
+  gap: 8px;
+}
+
+.ingRow .input {
+  flex: 1;
+}
+
+.amountInput {
+  max-width: 100px;
+}

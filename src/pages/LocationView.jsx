@@ -1,73 +1,46 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../lib/auth'
 import { 
   supabase, 
   SUB_LOCATIONS,
   CATEGORIES,
-  getAllCategories,
   getCategoryById, 
-  getSubLocationById,
   getSubLocationFromCategory,
   isInFreezer,
+  isSpice,
   formatDate, 
   getExpiryStatus, 
-  getDaysUntilExpiry 
+  getDaysUntilExpiry,
+  isExpiringSoon,
+  calculateFreezerExpiry,
 } from '../lib/supabase'
 import AddItemModal from '../components/AddItemModal'
 import ItemCard from '../components/ItemCard'
 import ShoppingList from './ShoppingList'
-import styles from './Dashboard.module.css'
+import ConfirmModal from '../components/ConfirmModal'
+import styles from './LocationView.module.css'
 
-export default function Dashboard() {
-  const { user, signOut } = useAuth()
-  const [locations, setLocations] = useState([])
-  const [currentLocation, setCurrentLocation] = useState(null)
+export default function LocationView({ locationType }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
+  const [deleteItem, setDeleteItem] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterSubLocation, setFilterSubLocation] = useState('')
-  const [showExpiring, setShowExpiring] = useState(false)
-  const [activeTab, setActiveTab] = useState('varasto') // 'varasto' or 'kauppalista'
+  const [activeTab, setActiveTab] = useState('varasto') // 'varasto', 'kauppalista', 'vanhentuvat'
 
-  // Fetch locations
+  const subLocations = SUB_LOCATIONS[locationType] || []
+
   useEffect(() => {
-    fetchLocations()
-  }, [])
-
-  // Fetch items when location changes
-  useEffect(() => {
-    if (currentLocation) {
-      fetchItems()
-    }
-  }, [currentLocation])
-
-  const fetchLocations = async () => {
-    const { data, error } = await supabase
-      .from('locations')
-      .select('*')
-      .order('name')
-
-    if (error) {
-      console.error('Error fetching locations:', error)
-      return
-    }
-
-    setLocations(data || [])
-    if (data && data.length > 0) {
-      setCurrentLocation(data[0])
-    }
-    setLoading(false)
-  }
+    fetchItems()
+  }, [locationType])
 
   const fetchItems = async () => {
-    if (!currentLocation) return
-
+    setLoading(true)
     const { data, error } = await supabase
       .from('items')
       .select('*')
-      .eq('location_id', currentLocation.id)
+      .eq('location_type', locationType)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -76,17 +49,16 @@ export default function Dashboard() {
     }
 
     setItems(data || [])
+    setLoading(false)
   }
 
   const handleAddItem = async (itemData) => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('items')
       .insert([{
         ...itemData,
-        location_id: currentLocation.id,
+        location_type: locationType,
       }])
-      .select()
-      .single()
 
     if (error) {
       console.error('Error adding item:', error)
@@ -113,18 +85,29 @@ export default function Dashboard() {
     setShowAddModal(false)
   }
 
-  const handleRemoveItem = async (item) => {
+  const handleDeleteItem = async () => {
+    if (!deleteItem) return
+
     const { error } = await supabase
       .from('items')
       .delete()
-      .eq('id', item.id)
+      .eq('id', deleteItem.id)
 
     if (error) {
-      console.error('Error removing item:', error)
+      console.error('Error deleting item:', error)
       return
     }
 
+    setDeleteItem(null)
     fetchItems()
+  }
+
+  // Get expiry date for display (calculated for freezer items)
+  const getItemExpiryDate = (item) => {
+    if (isInFreezer(item.category) && item.frozen_date) {
+      return calculateFreezerExpiry(item.frozen_date, item.category)
+    }
+    return item.expiry_date
   }
 
   // Filter items
@@ -132,20 +115,30 @@ export default function Dashboard() {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
     const itemSubLocation = getSubLocationFromCategory(item.category)
     const matchesSubLocation = !filterSubLocation || itemSubLocation === filterSubLocation
-    const matchesExpiring = !showExpiring || (
-      !isInFreezer(item.category) && 
-      ['expired', 'critical', 'warning'].includes(getExpiryStatus(item.expiry_date))
-    )
-    return matchesSearch && matchesSubLocation && matchesExpiring
+    return matchesSearch && matchesSubLocation
   })
 
-  // Count expiring items (excluding freezer items)
-  const expiringCount = items.filter(item => 
-    !isInFreezer(item.category) &&
-    ['expired', 'critical', 'warning'].includes(getExpiryStatus(item.expiry_date))
-  ).length
+  // Get expiring items (within 2-3 weeks)
+  const expiringItems = items.filter(item => {
+    const expiryDate = getItemExpiryDate(item)
+    return isExpiringSoon(expiryDate)
+  })
 
-  const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'Käyttäjä'
+  // Items without expiry date (excluding spices and items that don't need dates)
+  const itemsWithoutDate = items.filter(item => {
+    if (isSpice(item.category)) return false
+    if (isInFreezer(item.category)) {
+      return !item.frozen_date
+    }
+    return !item.expiry_date
+  })
+
+  // Combined "vanhentuvat" view items
+  const vanhenevatItems = [...expiringItems, ...itemsWithoutDate].filter(
+    (item, index, self) => self.findIndex(i => i.id === item.id) === index
+  )
+
+  const expiringCount = vanhenevatItems.length
 
   if (loading) {
     return (
@@ -157,74 +150,78 @@ export default function Dashboard() {
 
   return (
     <div className={styles.wrapper}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerTop}>
-          <div>
-            <h1 className={styles.greeting}>Hei, {username}</h1>
-            <p className={styles.subtitle}>
-              {items.length} tuotetta varastossa
-              {expiringCount > 0 && (
-                <span className={styles.expiringBadge}>
-                  {expiringCount} vanhenemassa
-                </span>
+      {/* Tab toggle */}
+      <div className={styles.tabToggle}>
+        <button
+          className={`${styles.tab} ${activeTab === 'vanhentuvat' ? styles.active : ''}`}
+          onClick={() => setActiveTab('vanhentuvat')}
+        >
+          ⚠️ Vanhentuvat
+          {expiringCount > 0 && <span className={styles.badge}>{expiringCount}</span>}
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'varasto' ? styles.active : ''}`}
+          onClick={() => setActiveTab('varasto')}
+        >
+          📦 Varasto
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'kauppalista' ? styles.active : ''}`}
+          onClick={() => setActiveTab('kauppalista')}
+        >
+          🛒 Kauppalista
+        </button>
+      </div>
+
+      {activeTab === 'vanhentuvat' && (
+        <div className={styles.mainContent}>
+          {vanhenevatItems.length === 0 ? (
+            <div className={styles.empty}>
+              <div className={styles.emptyIcon}>✨</div>
+              <p>Ei vanhentuvia tuotteita</p>
+            </div>
+          ) : (
+            <div className={styles.itemsList}>
+              {itemsWithoutDate.length > 0 && (
+                <div className={styles.section}>
+                  <h3 className={styles.sectionTitle}>📝 Lisää päiväys</h3>
+                  {itemsWithoutDate.map(item => (
+                    <ItemCard
+                      key={item.id}
+                      item={item}
+                      expiryDate={getItemExpiryDate(item)}
+                      onEdit={() => {
+                        setEditingItem(item)
+                        setShowAddModal(true)
+                      }}
+                      onDelete={() => setDeleteItem(item)}
+                    />
+                  ))}
+                </div>
               )}
-            </p>
-          </div>
-          <div className={styles.headerActions}>
-            <button 
-              className="btn btn-icon btn-secondary"
-              onClick={signOut}
-              title="Kirjaudu ulos"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </button>
-          </div>
+              {expiringItems.length > 0 && (
+                <div className={styles.section}>
+                  <h3 className={styles.sectionTitle}>⏰ Vanhenemassa 3 viikon sisällä</h3>
+                  {expiringItems.map(item => (
+                    <ItemCard
+                      key={item.id}
+                      item={item}
+                      expiryDate={getItemExpiryDate(item)}
+                      onEdit={() => {
+                        setEditingItem(item)
+                        setShowAddModal(true)
+                      }}
+                      onDelete={() => setDeleteItem(item)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
+      )}
 
-        {/* Location selector (for multiple locations like Home, Cabin) */}
-        {locations.length > 1 && (
-          <div className={styles.locationSelector}>
-            {locations.map(loc => (
-              <button
-                key={loc.id}
-                className={`${styles.locationBtn} ${currentLocation?.id === loc.id ? styles.active : ''}`}
-                onClick={() => setCurrentLocation(loc)}
-              >
-                {loc.name}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {locations.length === 1 && (
-          <div className={styles.locationBadge}>
-            📍 {currentLocation?.name}
-          </div>
-        )}
-
-        {/* Tab toggle */}
-        <div className={styles.tabToggle}>
-          <button
-            className={`${styles.tab} ${activeTab === 'varasto' ? styles.active : ''}`}
-            onClick={() => setActiveTab('varasto')}
-          >
-            📦 Varasto
-          </button>
-          <button
-            className={`${styles.tab} ${activeTab === 'kauppalista' ? styles.active : ''}`}
-            onClick={() => setActiveTab('kauppalista')}
-          >
-            🛒 Kauppalista
-          </button>
-        </div>
-      </header>
-
-      {activeTab === 'varasto' ? (
+      {activeTab === 'varasto' && (
         <>
           {/* Search and filters */}
           <div className={styles.filters}>
@@ -242,7 +239,6 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Sub-location filter tabs */}
             <div className={styles.subLocationTabs}>
               <button
                 className={`${styles.subLocationTab} ${!filterSubLocation ? styles.active : ''}`}
@@ -250,7 +246,7 @@ export default function Dashboard() {
               >
                 Kaikki
               </button>
-              {SUB_LOCATIONS.map(sub => (
+              {subLocations.map(sub => (
                 <button
                   key={sub.id}
                   className={`${styles.subLocationTab} ${filterSubLocation === sub.id ? styles.active : ''}`}
@@ -260,26 +256,14 @@ export default function Dashboard() {
                 </button>
               ))}
             </div>
-
-            {/* Expiring filter */}
-            {expiringCount > 0 && (
-              <button
-                className={`${styles.expiringBtn} ${showExpiring ? styles.active : ''}`}
-                onClick={() => setShowExpiring(!showExpiring)}
-              >
-                ⚠️ Vanhenemassa
-                <span className={styles.count}>{expiringCount}</span>
-              </button>
-            )}
           </div>
 
-          {/* Items list */}
-          <main className={styles.main}>
+          <div className={styles.mainContent}>
             {filteredItems.length === 0 ? (
               <div className={styles.empty}>
                 <div className={styles.emptyIcon}>📦</div>
-                <p>{searchQuery || filterSubLocation || showExpiring ? 'Ei hakua vastaavia tuotteita' : 'Ei tuotteita vielä'}</p>
-                {!searchQuery && !filterSubLocation && !showExpiring && (
+                <p>{searchQuery || filterSubLocation ? 'Ei hakua vastaavia tuotteita' : 'Ei tuotteita vielä'}</p>
+                {!searchQuery && !filterSubLocation && (
                   <button 
                     className="btn btn-secondary btn-sm mt-3"
                     onClick={() => setShowAddModal(true)}
@@ -294,16 +278,17 @@ export default function Dashboard() {
                   <ItemCard
                     key={item.id}
                     item={item}
+                    expiryDate={getItemExpiryDate(item)}
                     onEdit={() => {
                       setEditingItem(item)
                       setShowAddModal(true)
                     }}
-                    onRemove={() => handleRemoveItem(item)}
+                    onDelete={() => setDeleteItem(item)}
                   />
                 ))}
               </div>
             )}
-          </main>
+          </div>
 
           {/* Add button */}
           <button 
@@ -319,9 +304,11 @@ export default function Dashboard() {
             </svg>
           </button>
         </>
-      ) : (
+      )}
+
+      {activeTab === 'kauppalista' && (
         <ShoppingList 
-          locationId={currentLocation?.id} 
+          locationType={locationType} 
           onItemsAdded={fetchItems}
         />
       )}
@@ -330,11 +317,22 @@ export default function Dashboard() {
       {showAddModal && (
         <AddItemModal
           item={editingItem}
+          locationType={locationType}
           onClose={() => {
             setShowAddModal(false)
             setEditingItem(null)
           }}
           onSave={editingItem ? handleUpdateItem : handleAddItem}
+        />
+      )}
+
+      {deleteItem && (
+        <ConfirmModal
+          title="Poista tuote"
+          message={`Haluatko varmasti poistaa tuotteen "${deleteItem.name}"?`}
+          confirmText="Poista"
+          onConfirm={handleDeleteItem}
+          onCancel={() => setDeleteItem(null)}
         />
       )}
     </div>
