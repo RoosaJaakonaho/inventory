@@ -125,7 +125,7 @@ export default function AddItemModal({ item, locationType, onClose, onSave }) {
           </div>
 
           <div className={styles.field}>
-            <label className="label" htmlFor="weight">Paino</label>
+            <label className="label" htmlFor="weight">Määrä</label>
             <input
               id="weight"
               type="text"

@@ -6,12 +6,12 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 16px;
+  padding: 1rem;
   z-index: 100;
   animation: fadeIn 0.15s ease-out;
 }
 
-@media (min-width: 500px) {
+@media (min-width: 32rem) {
   .overlay {
     align-items: center;
   }
@@ -19,30 +19,31 @@
 
 .modal {
   width: 100%;
-  max-width: 420px;
+  max-width: min(26rem, 100%);
   max-height: 85vh;
+  max-height: 85dvh;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  overflow: hidden;
+  overflow-y: auto;
   animation: slideUp 0.2s ease-out;
 }
 
-@media (min-width: 500px) {
+@media (min-width: 32rem) {
   .modal {
     border-radius: var(--radius-lg);
   }
 }
 
 .modal.large {
-  max-width: 500px;
+  max-width: min(31rem, 100%);
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 16px 0;
+  padding: 1rem 1rem 0;
 }
 
 .title {
@@ -51,7 +52,7 @@
 }
 
 .closeBtn {
-  padding: 8px;
+  padding: 0.5rem;
   color: var(--text-secondary);
   border-radius: var(--radius-sm);
   transition: all 0.15s;
@@ -63,10 +64,10 @@
 }
 
 .form {
-  padding: 16px;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 1rem;
 }
 
 .field {
@@ -77,13 +78,13 @@
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .actions {
   display: flex;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 .actions .btn {
@@ -94,21 +95,21 @@
   font-size: 0.8125rem;
   color: var(--text-secondary);
   background: var(--bg-tertiary);
-  padding: 10px 12px;
+  padding: 0.625rem 0.75rem;
   border-radius: var(--radius-md);
-  margin-top: -8px;
+  margin-top: -0.5rem;
 }
 
 /* Toggle switch */
 .toggle {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
   cursor: pointer;
-  padding: 12px;
+  padding: 0.75rem;
   background: var(--bg-tertiary);
   border-radius: var(--radius-md);
-  margin-bottom: 4px;
+  margin-bottom: 0.25rem;
 }
 
 .toggle input {
@@ -116,10 +117,10 @@
 }
 
 .toggleSlider {
-  width: 44px;
-  height: 24px;
+  width: 2.75rem;
+  height: 1.5rem;
   background: var(--border);
-  border-radius: 12px;
+  border-radius: 0.75rem;
   position: relative;
   transition: background 0.2s;
   flex-shrink: 0;
@@ -128,12 +129,12 @@
 .toggleSlider::after {
   content: '';
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   background: var(--text-primary);
   border-radius: 50%;
-  top: 3px;
-  left: 3px;
+  top: 0.1875rem;
+  left: 0.1875rem;
   transition: transform 0.2s;
 }
 
@@ -142,7 +143,7 @@
 }
 
 .toggle input:checked + .toggleSlider::after {
-  transform: translateX(20px);
+  transform: translateX(1.25rem);
 }
 
 .toggleLabel {

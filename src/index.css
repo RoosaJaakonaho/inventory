@@ -17,6 +17,7 @@
   --radius-lg: 12px;
   --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'Space Mono', monospace;
+  --nav-height: 70px;
 }
 
 * {

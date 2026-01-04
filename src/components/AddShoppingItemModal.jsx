@@ -156,7 +156,7 @@ export default function AddShoppingItemModal({ item, locationType, onClose, onSa
               </div>
 
               <div className={styles.field}>
-                <label className="label" htmlFor="weight">Paino (valinnainen)</label>
+                <label className="label" htmlFor="weight">Määrä (valinnainen)</label>
                 <input
                   id="weight"
                   type="text"
