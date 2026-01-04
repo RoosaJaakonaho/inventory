@@ -23,14 +23,12 @@ CREATE TABLE items (
   category TEXT NOT NULL DEFAULT 'misc',
   weight TEXT,
   expiry_date DATE,
-  in_stock BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Index for faster queries
 CREATE INDEX idx_items_location ON items(location_id);
-CREATE INDEX idx_items_in_stock ON items(in_stock);
 CREATE INDEX idx_items_expiry ON items(expiry_date);
 
 -- 3. SHOPPING LIST TABLE

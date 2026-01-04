@@ -131,7 +131,6 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
           category: item.category,
           weight: item.weight,
           expiry_date: inFreezer ? null : null,
-          in_stock: true,
         }])
         .select()
         .single()

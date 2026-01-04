@@ -84,7 +84,6 @@ export default function Dashboard() {
       .insert([{
         ...itemData,
         location_id: currentLocation.id,
-        in_stock: true,
       }])
       .select()
       .single()
