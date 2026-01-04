@@ -314,7 +314,7 @@ export default function ShoppingList({ locationType, onItemsAdded }) {
         </>
       )}
 
-      {/* FAB */}
+      {/* FAB - always visible */}
       <button 
         className={styles.fab}
         onClick={() => {
