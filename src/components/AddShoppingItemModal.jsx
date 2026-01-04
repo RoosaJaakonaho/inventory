@@ -7,35 +7,49 @@ export default function AddShoppingItemModal({ item, onClose, onSave }) {
   const [weight, setWeight] = useState('')
   const [subLocation, setSubLocation] = useState('pakastin')
   const [category, setCategory] = useState('pakastin_kana')
+  const [isKayttotavara, setIsKayttotavara] = useState(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (item) {
       setName(item.name || '')
       setWeight(item.weight || '')
-      const itemSubLocation = getSubLocationFromCategory(item.category)
-      setSubLocation(itemSubLocation)
-      setCategory(item.category || CATEGORIES[itemSubLocation][0].id)
+      setIsKayttotavara(item.is_kayttotavara || false)
+      if (!item.is_kayttotavara && item.category) {
+        const itemSubLocation = getSubLocationFromCategory(item.category)
+        setSubLocation(itemSubLocation)
+        setCategory(item.category)
+      }
     }
   }, [item])
 
   // When sub-location changes, reset category to first option (only for new items)
   useEffect(() => {
-    if (!item) {
+    if (!item && !isKayttotavara) {
       const firstCategory = CATEGORIES[subLocation]?.[0]?.id || ''
       setCategory(firstCategory)
     }
-  }, [subLocation, item])
+  }, [subLocation, item, isKayttotavara])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
 
-    await onSave({
-      name: name.trim(),
-      weight: weight.trim() || null,
-      category,
-    })
+    if (isKayttotavara) {
+      await onSave({
+        name: name.trim(),
+        weight: null,
+        category: null,
+        is_kayttotavara: true,
+      })
+    } else {
+      await onSave({
+        name: name.trim(),
+        weight: weight.trim() || null,
+        category,
+        is_kayttotavara: false,
+      })
+    }
 
     setLoading(false)
   }
@@ -57,6 +71,17 @@ export default function AddShoppingItemModal({ item, onClose, onSave }) {
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {/* Käyttötavara toggle */}
+          <label className={styles.toggle}>
+            <input
+              type="checkbox"
+              checked={isKayttotavara}
+              onChange={(e) => setIsKayttotavara(e.target.checked)}
+            />
+            <span className={styles.toggleSlider}></span>
+            <span className={styles.toggleLabel}>Käyttötavara</span>
+          </label>
+
           <div className={styles.field}>
             <label className="label" htmlFor="name">Nimi *</label>
             <input
@@ -65,55 +90,59 @@ export default function AddShoppingItemModal({ item, onClose, onSave }) {
               className="input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="esim. Kanafile"
+              placeholder={isKayttotavara ? "esim. Tiskiharja" : "esim. Kanafile"}
               required
               autoFocus
             />
           </div>
 
-          <div className={styles.field}>
-            <label className="label" htmlFor="subLocation">Säilytyspaikka</label>
-            <select
-              id="subLocation"
-              className="input"
-              value={subLocation}
-              onChange={(e) => setSubLocation(e.target.value)}
-            >
-              {SUB_LOCATIONS.map(sub => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.icon} {sub.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!isKayttotavara && (
+            <>
+              <div className={styles.field}>
+                <label className="label" htmlFor="subLocation">Säilytyspaikka</label>
+                <select
+                  id="subLocation"
+                  className="input"
+                  value={subLocation}
+                  onChange={(e) => setSubLocation(e.target.value)}
+                >
+                  {SUB_LOCATIONS.map(sub => (
+                    <option key={sub.id} value={sub.id}>
+                      {sub.icon} {sub.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div className={styles.field}>
-            <label className="label" htmlFor="category">Kategoria</label>
-            <select
-              id="category"
-              className="input"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {currentCategories.map(cat => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.icon} {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div className={styles.field}>
+                <label className="label" htmlFor="category">Kategoria</label>
+                <select
+                  id="category"
+                  className="input"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  {currentCategories.map(cat => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.icon} {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div className={styles.field}>
-            <label className="label" htmlFor="weight">Paino (valinnainen)</label>
-            <input
-              id="weight"
-              type="text"
-              className="input"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              placeholder="esim. 500g"
-            />
-          </div>
+              <div className={styles.field}>
+                <label className="label" htmlFor="weight">Paino (valinnainen)</label>
+                <input
+                  id="weight"
+                  type="text"
+                  className="input"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  placeholder="esim. 500g"
+                />
+              </div>
+            </>
+          )}
 
           <div className={styles.actions}>
             <button 

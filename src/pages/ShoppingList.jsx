@@ -112,8 +112,17 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
 
     setFinishing(true)
 
-    // Add checked items to inventory
     for (const item of checkedItems) {
+      // Skip käyttötavara - just remove from list, don't add to inventory
+      if (item.is_kayttotavara) {
+        await supabase
+          .from('shopping_list')
+          .delete()
+          .eq('id', item.id)
+        continue
+      }
+
+      // Add food items to inventory
       const inFreezer = isInFreezer(item.category)
       
       const { data: newItem, error: insertError } = await supabase
@@ -123,7 +132,7 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
           name: item.name,
           category: item.category,
           weight: item.weight,
-          expiry_date: inFreezer ? null : null, // User can add expiry later
+          expiry_date: inFreezer ? null : null,
           in_stock: true,
         }])
         .select()
@@ -157,10 +166,14 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
 
   const checkedCount = items.filter(i => i.checked).length
 
-  // Group items by sub-location
-  const groupedItems = SUB_LOCATIONS.map(sub => ({
+  // Separate käyttötavara and food items
+  const kayttotavaraItems = items.filter(item => item.is_kayttotavara)
+  const foodItems = items.filter(item => !item.is_kayttotavara)
+
+  // Group food items by sub-location
+  const groupedFoodItems = SUB_LOCATIONS.map(sub => ({
     ...sub,
-    items: items.filter(item => getSubLocationFromCategory(item.category) === sub.id)
+    items: foodItems.filter(item => getSubLocationFromCategory(item.category) === sub.id)
   })).filter(group => group.items.length > 0)
 
   if (loading) {
@@ -187,7 +200,8 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
       ) : (
         <>
           <div className={styles.list}>
-            {groupedItems.map(group => (
+            {/* Food items grouped by sub-location */}
+            {groupedFoodItems.map(group => (
               <div key={group.id} className={styles.group}>
                 <h3 className={styles.groupTitle}>
                   {group.icon} {group.name}
@@ -245,6 +259,59 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
                 })}
               </div>
             ))}
+
+            {/* Käyttötavara items */}
+            {kayttotavaraItems.length > 0 && (
+              <div className={styles.group}>
+                <h3 className={styles.groupTitle}>
+                  🧹 Käyttötavara
+                </h3>
+                {kayttotavaraItems.map(item => (
+                  <div 
+                    key={item.id} 
+                    className={`${styles.item} ${item.checked ? styles.checked : ''}`}
+                  >
+                    <div 
+                      className={styles.checkbox}
+                      onClick={() => handleToggleItem(item)}
+                    >
+                      {item.checked && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      )}
+                    </div>
+                    <div 
+                      className={styles.itemInfo}
+                      onClick={() => handleToggleItem(item)}
+                    >
+                      <span className={styles.itemName}>{item.name}</span>
+                    </div>
+                    <button 
+                      className={styles.editBtn}
+                      onClick={() => {
+                        setEditingItem(item)
+                        setShowAddModal(true)
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    <button 
+                      className={styles.deleteBtn}
+                      onClick={() => handleDeleteItem(item)}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {checkedCount > 0 && (

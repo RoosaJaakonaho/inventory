@@ -54,9 +54,10 @@ CREATE TABLE shopping_list (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   location_id UUID REFERENCES locations(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
-  category TEXT NOT NULL,
+  category TEXT,
   weight TEXT,
   checked BOOLEAN DEFAULT false,
+  is_kayttotavara BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
