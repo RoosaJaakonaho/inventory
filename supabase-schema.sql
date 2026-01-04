@@ -48,7 +48,21 @@ CREATE TABLE history (
 CREATE INDEX idx_history_location ON history(location_id);
 CREATE INDEX idx_history_created ON history(created_at DESC);
 
--- 4. AUTO-UPDATE TIMESTAMP TRIGGER
+-- 4. SHOPPING LIST TABLE
+-- Stores shopping list items per location
+CREATE TABLE shopping_list (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  location_id UUID REFERENCES locations(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  weight TEXT,
+  checked BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_shopping_list_location ON shopping_list(location_id);
+
+-- 5. AUTO-UPDATE TIMESTAMP TRIGGER
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -69,6 +83,7 @@ CREATE TRIGGER items_updated_at
 ALTER TABLE locations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shopping_list ENABLE ROW LEVEL SECURITY;
 
 -- Policies: Allow authenticated users full access
 -- (All users share the same inventory)
@@ -112,6 +127,26 @@ CREATE POLICY "Allow authenticated insert history"
   ON history FOR INSERT
   TO authenticated
   WITH CHECK (true);
+
+CREATE POLICY "Allow authenticated read shopping_list"
+  ON shopping_list FOR SELECT
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "Allow authenticated insert shopping_list"
+  ON shopping_list FOR INSERT
+  TO authenticated
+  WITH CHECK (true);
+
+CREATE POLICY "Allow authenticated update shopping_list"
+  ON shopping_list FOR UPDATE
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "Allow authenticated delete shopping_list"
+  ON shopping_list FOR DELETE
+  TO authenticated
+  USING (true);
 
 -- ============================================
 -- DONE!

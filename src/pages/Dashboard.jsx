@@ -16,6 +16,7 @@ import {
 import AddItemModal from '../components/AddItemModal'
 import ItemCard from '../components/ItemCard'
 import HistoryModal from '../components/HistoryModal'
+import ShoppingList from './ShoppingList'
 import styles from './Dashboard.module.css'
 
 export default function Dashboard() {
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterSubLocation, setFilterSubLocation] = useState('')
   const [showExpiring, setShowExpiring] = useState(false)
+  const [activeTab, setActiveTab] = useState('varasto') // 'varasto' or 'kauppalista'
 
   // Fetch locations
   useEffect(() => {
@@ -267,100 +269,125 @@ export default function Dashboard() {
             📍 {currentLocation?.name}
           </div>
         )}
+
+        {/* Tab toggle */}
+        <div className={styles.tabToggle}>
+          <button
+            className={`${styles.tab} ${activeTab === 'varasto' ? styles.active : ''}`}
+            onClick={() => setActiveTab('varasto')}
+          >
+            📦 Varasto
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'kauppalista' ? styles.active : ''}`}
+            onClick={() => setActiveTab('kauppalista')}
+          >
+            🛒 Kauppalista
+          </button>
+        </div>
       </header>
 
-      {/* Search and filters */}
-      <div className={styles.filters}>
-        <div className={styles.searchWrap}>
-          <svg className={styles.searchIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder="Hae tuotteita..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+      {activeTab === 'varasto' ? (
+        <>
+          {/* Search and filters */}
+          <div className={styles.filters}>
+            <div className={styles.searchWrap}>
+              <svg className={styles.searchIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Hae tuotteita..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
 
-        {/* Sub-location filter tabs */}
-        <div className={styles.subLocationTabs}>
-          <button
-            className={`${styles.subLocationTab} ${!filterSubLocation ? styles.active : ''}`}
-            onClick={() => setFilterSubLocation('')}
-          >
-            Kaikki
-          </button>
-          {SUB_LOCATIONS.map(sub => (
-            <button
-              key={sub.id}
-              className={`${styles.subLocationTab} ${filterSubLocation === sub.id ? styles.active : ''}`}
-              onClick={() => setFilterSubLocation(sub.id)}
-            >
-              {sub.icon} {sub.name}
-            </button>
-          ))}
-        </div>
-
-        {/* Expiring filter */}
-        {expiringCount > 0 && (
-          <button
-            className={`${styles.expiringBtn} ${showExpiring ? styles.active : ''}`}
-            onClick={() => setShowExpiring(!showExpiring)}
-          >
-            ⚠️ Vanhenemassa
-            <span className={styles.count}>{expiringCount}</span>
-          </button>
-        )}
-      </div>
-
-      {/* Items list */}
-      <main className={styles.main}>
-        {filteredItems.length === 0 ? (
-          <div className={styles.empty}>
-            <div className={styles.emptyIcon}>📦</div>
-            <p>{searchQuery || filterSubLocation || showExpiring ? 'Ei hakua vastaavia tuotteita' : 'Ei tuotteita vielä'}</p>
-            {!searchQuery && !filterSubLocation && !showExpiring && (
-              <button 
-                className="btn btn-secondary btn-sm mt-3"
-                onClick={() => setShowAddModal(true)}
+            {/* Sub-location filter tabs */}
+            <div className={styles.subLocationTabs}>
+              <button
+                className={`${styles.subLocationTab} ${!filterSubLocation ? styles.active : ''}`}
+                onClick={() => setFilterSubLocation('')}
               >
-                Lisää ensimmäinen tuote
+                Kaikki
+              </button>
+              {SUB_LOCATIONS.map(sub => (
+                <button
+                  key={sub.id}
+                  className={`${styles.subLocationTab} ${filterSubLocation === sub.id ? styles.active : ''}`}
+                  onClick={() => setFilterSubLocation(sub.id)}
+                >
+                  {sub.icon} {sub.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Expiring filter */}
+            {expiringCount > 0 && (
+              <button
+                className={`${styles.expiringBtn} ${showExpiring ? styles.active : ''}`}
+                onClick={() => setShowExpiring(!showExpiring)}
+              >
+                ⚠️ Vanhenemassa
+                <span className={styles.count}>{expiringCount}</span>
               </button>
             )}
           </div>
-        ) : (
-          <div className={styles.itemsList}>
-            {filteredItems.map(item => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                onEdit={() => {
-                  setEditingItem(item)
-                  setShowAddModal(true)
-                }}
-                onRemove={() => handleRemoveItem(item)}
-              />
-            ))}
-          </div>
-        )}
-      </main>
 
-      {/* Add button */}
-      <button 
-        className={styles.fab}
-        onClick={() => {
-          setEditingItem(null)
-          setShowAddModal(true)
-        }}
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <line x1="12" y1="5" x2="12" y2="19"/>
-          <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-      </button>
+          {/* Items list */}
+          <main className={styles.main}>
+            {filteredItems.length === 0 ? (
+              <div className={styles.empty}>
+                <div className={styles.emptyIcon}>📦</div>
+                <p>{searchQuery || filterSubLocation || showExpiring ? 'Ei hakua vastaavia tuotteita' : 'Ei tuotteita vielä'}</p>
+                {!searchQuery && !filterSubLocation && !showExpiring && (
+                  <button 
+                    className="btn btn-secondary btn-sm mt-3"
+                    onClick={() => setShowAddModal(true)}
+                  >
+                    Lisää ensimmäinen tuote
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className={styles.itemsList}>
+                {filteredItems.map(item => (
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    onEdit={() => {
+                      setEditingItem(item)
+                      setShowAddModal(true)
+                    }}
+                    onRemove={() => handleRemoveItem(item)}
+                  />
+                ))}
+              </div>
+            )}
+          </main>
+
+          {/* Add button */}
+          <button 
+            className={styles.fab}
+            onClick={() => {
+              setEditingItem(null)
+              setShowAddModal(true)
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+        </>
+      ) : (
+        <ShoppingList 
+          locationId={currentLocation?.id} 
+          onItemsAdded={fetchItems}
+        />
+      )}
 
       {/* Modals */}
       {showAddModal && (
