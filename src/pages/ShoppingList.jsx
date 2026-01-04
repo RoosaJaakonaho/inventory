@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../lib/auth'
 import { 
   supabase, 
   SUB_LOCATIONS,
@@ -13,7 +12,6 @@ import AddShoppingItemModal from '../components/AddShoppingItemModal'
 import styles from './ShoppingList.module.css'
 
 export default function ShoppingList({ locationId, onItemsAdded }) {
-  const { user } = useAuth()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -142,15 +140,6 @@ export default function ShoppingList({ locationId, onItemsAdded }) {
         console.error('Error adding item to inventory:', insertError)
         continue
       }
-
-      // Log history
-      await supabase.from('history').insert([{
-        item_id: newItem.id,
-        location_id: locationId,
-        action: 'added',
-        user_email: user.email,
-        details: `Lisätty kauppalistalta: ${item.name}`,
-      }])
 
       // Remove from shopping list
       await supabase

@@ -33,22 +33,7 @@ CREATE INDEX idx_items_location ON items(location_id);
 CREATE INDEX idx_items_in_stock ON items(in_stock);
 CREATE INDEX idx_items_expiry ON items(expiry_date);
 
--- 3. HISTORY TABLE
--- Tracks all changes for audit trail
-CREATE TABLE history (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  item_id UUID REFERENCES items(id) ON DELETE SET NULL,
-  location_id UUID REFERENCES locations(id) ON DELETE CASCADE NOT NULL,
-  action TEXT NOT NULL, -- 'added', 'removed', 'updated', 'restored'
-  user_email TEXT NOT NULL,
-  details TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE INDEX idx_history_location ON history(location_id);
-CREATE INDEX idx_history_created ON history(created_at DESC);
-
--- 4. SHOPPING LIST TABLE
+-- 3. SHOPPING LIST TABLE
 -- Stores shopping list items per location
 CREATE TABLE shopping_list (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -63,7 +48,7 @@ CREATE TABLE shopping_list (
 
 CREATE INDEX idx_shopping_list_location ON shopping_list(location_id);
 
--- 5. AUTO-UPDATE TIMESTAMP TRIGGER
+-- 4. AUTO-UPDATE TIMESTAMP TRIGGER
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -83,7 +68,6 @@ CREATE TRIGGER items_updated_at
 -- Enable RLS on all tables
 ALTER TABLE locations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shopping_list ENABLE ROW LEVEL SECURITY;
 
 -- Policies: Allow authenticated users full access
@@ -118,16 +102,6 @@ CREATE POLICY "Allow authenticated delete items"
   ON items FOR DELETE
   TO authenticated
   USING (true);
-
-CREATE POLICY "Allow authenticated read history"
-  ON history FOR SELECT
-  TO authenticated
-  USING (true);
-
-CREATE POLICY "Allow authenticated insert history"
-  ON history FOR INSERT
-  TO authenticated
-  WITH CHECK (true);
 
 CREATE POLICY "Allow authenticated read shopping_list"
   ON shopping_list FOR SELECT
