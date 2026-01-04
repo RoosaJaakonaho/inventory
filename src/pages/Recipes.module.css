@@ -1,5 +1,6 @@
 .wrapper {
-  min-height: calc(100vh - 140px);
+  min-height: calc(100vh - var(--nav-height));
+  min-height: calc(100dvh - var(--nav-height));
 }
 
 .loading {
