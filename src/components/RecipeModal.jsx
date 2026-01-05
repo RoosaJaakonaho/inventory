@@ -15,6 +15,7 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
   const [newIngAmount, setNewIngAmount] = useState('')
   const [newIngSubLocation, setNewIngSubLocation] = useState('pakastin')
   const [newIngCategory, setNewIngCategory] = useState('pakastin_kana')
+  const [editingIngredientIndex, setEditingIngredientIndex] = useState(null)
   const ingredientInputRef = useRef(null)
 
   useEffect(() => {
@@ -43,12 +44,38 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
       category: newIngCategory,
     }
 
-    setIngredients([...ingredients, newIngredient])
+    if (editingIngredientIndex !== null) {
+      // Update existing ingredient
+      const updated = [...ingredients]
+      updated[editingIngredientIndex] = newIngredient
+      setIngredients(updated)
+      setEditingIngredientIndex(null)
+    } else {
+      // Add new ingredient
+      setIngredients([...ingredients, newIngredient])
+    }
+    
     setNewIngName('')
     setNewIngAmount('')
     
     // Focus back to ingredient name input
     ingredientInputRef.current?.focus()
+  }
+
+  const handleEditIngredient = (index) => {
+    const ing = ingredients[index]
+    setNewIngName(ing.name)
+    setNewIngAmount(ing.amount || '')
+    setNewIngSubLocation(ing.sub_location)
+    setNewIngCategory(ing.category)
+    setEditingIngredientIndex(index)
+    ingredientInputRef.current?.focus()
+  }
+
+  const handleCancelEdit = () => {
+    setEditingIngredientIndex(null)
+    setNewIngName('')
+    setNewIngAmount('')
   }
 
   const handleRemoveIngredient = (index) => {
@@ -146,13 +173,24 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
               <div className={styles.ingredientsList}>
                 {ingredients.map((ing, idx) => {
                   const cat = getCategoryById(ing.category)
+                  const isEditing = editingIngredientIndex === idx
                   return (
-                    <div key={idx} className={styles.ingredientItem}>
+                    <div key={idx} className={`${styles.ingredientItem} ${isEditing ? styles.editing : ''}`}>
                       <span className={styles.ingredientIcon}>{cat.icon}</span>
                       <span className={styles.ingredientName}>
                         {ing.name}
                         {ing.amount && <span className={styles.ingredientAmount}> ({ing.amount})</span>}
                       </span>
+                      <button 
+                        type="button"
+                        className={styles.editIngBtn}
+                        onClick={() => handleEditIngredient(idx)}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
                       <button 
                         type="button"
                         className={styles.removeIngBtn}
@@ -212,14 +250,25 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
                   ))}
                 </select>
               </div>
-              <button 
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={handleAddIngredient}
-                disabled={!newIngName.trim()}
-              >
-                + Lisää ainesosa
-              </button>
+              <div className={styles.ingActions}>
+                {editingIngredientIndex !== null && (
+                  <button 
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={handleCancelEdit}
+                  >
+                    Peruuta
+                  </button>
+                )}
+                <button 
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleAddIngredient}
+                  disabled={!newIngName.trim()}
+                >
+                  {editingIngredientIndex !== null ? '✓ Tallenna' : '+ Lisää ainesosa'}
+                </button>
+              </div>
             </div>
           </div>
 
