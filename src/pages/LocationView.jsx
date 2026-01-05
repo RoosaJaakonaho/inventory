@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { 
   supabase, 
   SUB_LOCATIONS,
@@ -27,7 +27,7 @@ export default function LocationView({ locationType }) {
   const [deleteItem, setDeleteItem] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterSubLocation, setFilterSubLocation] = useState('')
-  const [activeTab, setActiveTab] = useState('varasto') // 'varasto', 'kauppalista', 'vanhentuvat'
+  const [activeTab, setActiveTab] = useState('varasto')
 
   const subLocations = SUB_LOCATIONS[locationType] || []
 
@@ -110,33 +110,41 @@ export default function LocationView({ locationType }) {
     return item.expiry_date
   }
 
-  // Filter items
-  const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const itemSubLocation = getSubLocationFromCategory(item.category)
-    const matchesSubLocation = !filterSubLocation || itemSubLocation === filterSubLocation
-    return matchesSearch && matchesSubLocation
-  })
+  // Filter items - memoized
+  const filteredItems = useMemo(() => {
+    return items.filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      const itemSubLocation = getSubLocationFromCategory(item.category)
+      const matchesSubLocation = !filterSubLocation || itemSubLocation === filterSubLocation
+      return matchesSearch && matchesSubLocation
+    })
+  }, [items, searchQuery, filterSubLocation])
 
-  // Get expiring items (within 2-3 weeks)
-  const expiringItems = items.filter(item => {
-    const expiryDate = getItemExpiryDate(item)
-    return isExpiringSoon(expiryDate)
-  })
+  // Get expiring items (within 2-3 weeks) - memoized
+  const expiringItems = useMemo(() => {
+    return items.filter(item => {
+      const expiryDate = getItemExpiryDate(item)
+      return isExpiringSoon(expiryDate)
+    })
+  }, [items])
 
-  // Items without expiry date (excluding spices and items that don't need dates)
-  const itemsWithoutDate = items.filter(item => {
-    if (isSpice(item.category)) return false
-    if (isInFreezer(item.category)) {
-      return !item.frozen_date
-    }
-    return !item.expiry_date
-  })
+  // Items without expiry date (excluding spices and items that don't need dates) - memoized
+  const itemsWithoutDate = useMemo(() => {
+    return items.filter(item => {
+      if (isSpice(item.category)) return false
+      if (isInFreezer(item.category)) {
+        return !item.frozen_date
+      }
+      return !item.expiry_date
+    })
+  }, [items])
 
-  // Combined "vanhentuvat" view items
-  const vanhenevatItems = [...expiringItems, ...itemsWithoutDate].filter(
-    (item, index, self) => self.findIndex(i => i.id === item.id) === index
-  )
+  // Combined "vanhentuvat" view items - memoized
+  const vanhenevatItems = useMemo(() => {
+    return [...expiringItems, ...itemsWithoutDate].filter(
+      (item, index, self) => self.findIndex(i => i.id === item.id) === index
+    )
+  }, [expiringItems, itemsWithoutDate])
 
   const expiringCount = vanhenevatItems.length
 

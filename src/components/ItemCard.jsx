@@ -1,7 +1,8 @@
+import { memo } from 'react'
 import { getCategoryById, getSubLocationById, getSubLocationFromCategory, isInFreezer, isSpice, formatDate, getExpiryStatus, getDaysUntilExpiry } from '../lib/supabase'
 import styles from './ItemCard.module.css'
 
-export default function ItemCard({ item, expiryDate, onEdit, onDelete }) {
+export default memo(function ItemCard({ item, expiryDate, onEdit, onDelete }) {
   const category = getCategoryById(item.category)
   const subLocationId = getSubLocationFromCategory(item.category)
   const subLocation = getSubLocationById(subLocationId)
@@ -83,4 +84,4 @@ export default function ItemCard({ item, expiryDate, onEdit, onDelete }) {
       </div>
     </div>
   )
-}
+})
