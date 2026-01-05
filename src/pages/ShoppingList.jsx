@@ -27,6 +27,7 @@ export default function ShoppingList({ locationType, onItemsAdded }) {
       .from('shopping_list')
       .select('*')
       .eq('location_type', locationType)
+      .order('sort_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
 
     if (error) {
@@ -36,6 +37,25 @@ export default function ShoppingList({ locationType, onItemsAdded }) {
 
     setItems(data || [])
     setLoading(false)
+  }
+
+  const handleMoveItem = async (index, direction) => {
+    const newIndex = index + direction
+    if (newIndex < 0 || newIndex >= items.length) return
+    
+    const updated = [...items]
+    const [moved] = updated.splice(index, 1)
+    updated.splice(newIndex, 0, moved)
+    setItems(updated)
+    
+    // Update sort_order in database
+    const updates = updated.map((item, idx) => 
+      supabase
+        .from('shopping_list')
+        .update({ sort_order: idx })
+        .eq('id', item.id)
+    )
+    await Promise.all(updates)
   }
 
   const handleAddItem = async (itemData) => {
@@ -150,17 +170,6 @@ export default function ShoppingList({ locationType, onItemsAdded }) {
   }
 
   const checkedCount = items.filter(i => i.checked).length
-  const subLocations = SUB_LOCATIONS[locationType] || []
-
-  // Separate non-inventory and food items
-  const nonInventoryItems = items.filter(item => item.is_non_inventory)
-  const foodItems = items.filter(item => !item.is_non_inventory)
-
-  // Group food items by sub-location
-  const groupedFoodItems = subLocations.map(sub => ({
-    ...sub,
-    items: foodItems.filter(item => getSubLocationFromCategory(item.category) === sub.id)
-  })).filter(group => group.items.length > 0)
 
   if (loading) {
     return (
@@ -186,118 +195,86 @@ export default function ShoppingList({ locationType, onItemsAdded }) {
       ) : (
         <>
           <div className={styles.list}>
-            {/* Food items grouped by sub-location */}
-            {groupedFoodItems.map(group => (
-              <div key={group.id} className={styles.group}>
-                <h3 className={styles.groupTitle}>
-                  {group.icon} {group.name}
-                </h3>
-                {group.items.map(item => {
-                  const category = getCategoryById(item.category)
-                  return (
-                    <div 
-                      key={item.id} 
-                      className={`${styles.item} ${item.checked ? styles.checked : ''}`}
-                    >
-                      <div 
-                        className={styles.checkbox}
-                        onClick={() => handleToggleItem(item)}
-                      >
-                        {item.checked && (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        )}
-                      </div>
-                      <div 
-                        className={styles.itemInfo}
-                        onClick={() => handleToggleItem(item)}
-                      >
-                        <span className={styles.itemName}>{item.name}</span>
-                        <span className={styles.itemMeta}>
-                          {category.name}
-                          {item.weight && ` · ${item.weight}`}
-                        </span>
-                      </div>
-                      <button 
-                        className={styles.editBtn}
-                        onClick={() => {
-                          setEditingItem(item)
-                          setShowAddModal(true)
-                        }}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                      </button>
-                      <button 
-                        className={styles.deleteBtn}
-                        onClick={() => handleDeleteItem(item)}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="18" y1="6" x2="6" y2="18"/>
-                          <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            ))}
-
-            {/* Non-inventory items */}
-            {nonInventoryItems.length > 0 && (
-              <div className={styles.group}>
-                <h3 className={styles.groupTitle}>
-                  🚫 Ei inventaarioon
-                </h3>
-                {nonInventoryItems.map(item => (
-                  <div 
-                    key={item.id} 
-                    className={`${styles.item} ${item.checked ? styles.checked : ''}`}
-                  >
-                    <div 
-                      className={styles.checkbox}
-                      onClick={() => handleToggleItem(item)}
-                    >
-                      {item.checked && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      )}
-                    </div>
-                    <div 
-                      className={styles.itemInfo}
-                      onClick={() => handleToggleItem(item)}
-                    >
-                      <span className={styles.itemName}>{item.name}</span>
-                    </div>
+            {items.map((item, index) => {
+              const category = item.category ? getCategoryById(item.category) : null
+              const isFirst = index === 0
+              const isLast = index === items.length - 1
+              return (
+                <div 
+                  key={item.id} 
+                  className={`${styles.item} ${item.checked ? styles.checked : ''}`}
+                >
+                  <div className={styles.moveButtons}>
                     <button 
-                      className={styles.editBtn}
-                      onClick={() => {
-                        setEditingItem(item)
-                        setShowAddModal(true)
-                      }}
+                      type="button"
+                      className={styles.moveBtn}
+                      onClick={() => handleMoveItem(index, -1)}
+                      disabled={isFirst}
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="18 15 12 9 6 15"/>
                       </svg>
                     </button>
                     <button 
-                      className={styles.deleteBtn}
-                      onClick={() => handleDeleteItem(item)}
+                      type="button"
+                      className={styles.moveBtn}
+                      onClick={() => handleMoveItem(index, 1)}
+                      disabled={isLast}
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="6 9 12 15 18 9"/>
                       </svg>
                     </button>
                   </div>
-                ))}
-              </div>
-            )}
+                  <div 
+                    className={styles.checkbox}
+                    onClick={() => handleToggleItem(item)}
+                  >
+                    {item.checked && (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div 
+                    className={styles.itemInfo}
+                    onClick={() => handleToggleItem(item)}
+                  >
+                    <span className={styles.itemName}>{item.name}</span>
+                    {!item.is_non_inventory && category && (
+                      <span className={styles.itemMeta}>
+                        {category.icon} {category.name}
+                        {item.weight && ` · ${item.weight}`}
+                      </span>
+                    )}
+                    {item.is_non_inventory && (
+                      <span className={styles.itemMeta}>Ei inventaarioon</span>
+                    )}
+                  </div>
+                  <button 
+                    className={styles.editBtn}
+                    onClick={() => {
+                      setEditingItem(item)
+                      setShowAddModal(true)
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button 
+                    className={styles.deleteBtn}
+                    onClick={() => handleDeleteItem(item)}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+              )
+            })}
           </div>
 
           {checkedCount > 0 && (
