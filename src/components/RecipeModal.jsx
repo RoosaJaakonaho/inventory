@@ -80,6 +80,28 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
 
   const handleRemoveIngredient = (index) => {
     setIngredients(ingredients.filter((_, i) => i !== index))
+    if (editingIngredientIndex === index) {
+      setEditingIngredientIndex(null)
+      setNewIngName('')
+      setNewIngAmount('')
+    }
+  }
+
+  const handleMoveIngredient = (index, direction) => {
+    const newIndex = index + direction
+    if (newIndex < 0 || newIndex >= ingredients.length) return
+    
+    const updated = [...ingredients]
+    const [moved] = updated.splice(index, 1)
+    updated.splice(newIndex, 0, moved)
+    setIngredients(updated)
+    
+    // Update editing index if needed
+    if (editingIngredientIndex === index) {
+      setEditingIngredientIndex(newIndex)
+    } else if (editingIngredientIndex === newIndex) {
+      setEditingIngredientIndex(index)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -174,8 +196,34 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
                 {ingredients.map((ing, idx) => {
                   const cat = getCategoryById(ing.category)
                   const isEditing = editingIngredientIndex === idx
+                  const isFirst = idx === 0
+                  const isLast = idx === ingredients.length - 1
                   return (
                     <div key={idx} className={`${styles.ingredientItem} ${isEditing ? styles.editing : ''}`}>
+                      <div className={styles.moveButtons}>
+                        <button 
+                          type="button"
+                          className={styles.moveBtn}
+                          onClick={() => handleMoveIngredient(idx, -1)}
+                          disabled={isFirst}
+                          title="Siirrä ylös"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="18 15 12 9 6 15"/>
+                          </svg>
+                        </button>
+                        <button 
+                          type="button"
+                          className={styles.moveBtn}
+                          onClick={() => handleMoveIngredient(idx, 1)}
+                          disabled={isLast}
+                          title="Siirrä alas"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                          </svg>
+                        </button>
+                      </div>
                       <span className={styles.ingredientIcon}>{cat.icon}</span>
                       <span className={styles.ingredientName}>
                         {ing.name}

@@ -32,10 +32,34 @@
 .ingredientItem {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
   background: var(--bg-tertiary);
   border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+}
+
+.moveButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.moveBtn {
+  padding: 0.125rem;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+}
+
+.moveBtn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.moveBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .ingredientIcon {
@@ -52,7 +76,7 @@
 }
 
 .removeIngBtn {
-  padding: 4px;
+  padding: 0.25rem;
   color: var(--text-muted);
   border-radius: var(--radius-sm);
   transition: all 0.15s;
@@ -61,6 +85,28 @@
 .removeIngBtn:hover {
   background: rgba(255, 107, 107, 0.15);
   color: var(--danger);
+}
+
+.editIngBtn {
+  padding: 0.25rem;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+}
+
+.editIngBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.ingredientItem.editing {
+  border-color: var(--accent-dim);
+  background: var(--bg-hover);
+}
+
+.ingActions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .addIngredient {
