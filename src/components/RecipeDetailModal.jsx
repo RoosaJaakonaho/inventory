@@ -116,8 +116,8 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
                         )}
                       </div>
                       <span className={styles.ingIcon}>{cat.icon}</span>
-                      <span className={styles.ingName}>{ing.name}</span>
                       {ing.amount && <span className={styles.ingAmount}>{ing.amount}</span>}
+                      <span className={styles.ingName}>{ing.name}</span>
                     </div>
                   )
                 })}
