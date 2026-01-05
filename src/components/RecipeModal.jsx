@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { RECIPE_CATEGORIES, SUB_LOCATIONS, CATEGORIES, getCategoryById } from '../lib/supabase'
 import styles from './RecipeModal.module.css'
 import modalStyles from './Modal.module.css'
@@ -13,8 +13,9 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
   // New ingredient form
   const [newIngName, setNewIngName] = useState('')
   const [newIngAmount, setNewIngAmount] = useState('')
-  const [newIngSubLocation, setNewIngSubLocation] = useState('jaakaappi')
-  const [newIngCategory, setNewIngCategory] = useState('jaakaappi_muut')
+  const [newIngSubLocation, setNewIngSubLocation] = useState('pakastin')
+  const [newIngCategory, setNewIngCategory] = useState('pakastin_kana')
+  const ingredientInputRef = useRef(null)
 
   useEffect(() => {
     if (recipe) {
@@ -45,6 +46,9 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
     setIngredients([...ingredients, newIngredient])
     setNewIngName('')
     setNewIngAmount('')
+    
+    // Focus back to ingredient name input
+    ingredientInputRef.current?.focus()
   }
 
   const handleRemoveIngredient = (index) => {
@@ -169,6 +173,7 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
             <div className={styles.addIngredient}>
               <div className={styles.ingRow}>
                 <input
+                  ref={ingredientInputRef}
                   type="text"
                   className="input"
                   value={newIngName}
