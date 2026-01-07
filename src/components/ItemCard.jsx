@@ -44,10 +44,10 @@ export default memo(function ItemCard({ item, expiryDate, onEdit, onDelete }) {
             <span className={styles.subLocation}>{subLocation.icon} {subLocation.name}</span>
             <span className={styles.dot}>·</span>
             <span className={styles.category}>{category.name}</span>
-            {item.weight && (
+            {item.amount && (
               <>
                 <span className={styles.dot}>·</span>
-                <span>{item.weight}</span>
+                <span>{item.amount} {item.unit || ''}</span>
               </>
             )}
           </div>

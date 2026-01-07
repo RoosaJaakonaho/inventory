@@ -1,23 +1,26 @@
-import { useState, useEffect } from 'react'
-import { SUB_LOCATIONS, CATEGORIES, getSubLocationFromCategory, isInFreezer, isSpice } from '../lib/supabase'
+import { useState, useEffect, useRef } from 'react'
+import { SUB_LOCATIONS, CATEGORIES, UNITS, getSubLocationFromCategory, isInFreezer, isSpice } from '../lib/supabase'
 import styles from './Modal.module.css'
 
 export default function AddShoppingItemModal({ item, locationType, onClose, onSave }) {
+  const [amount, setAmount] = useState('')
+  const [unit, setUnit] = useState('kpl')
   const [name, setName] = useState('')
-  const [weight, setWeight] = useState('')
   const [subLocation, setSubLocation] = useState('')
   const [category, setCategory] = useState('')
   const [expiryDate, setExpiryDate] = useState('')
   const [frozenDate, setFrozenDate] = useState('')
   const [isNonInventory, setIsNonInventory] = useState(false)
   const [loading, setLoading] = useState(false)
+  const amountInputRef = useRef(null)
 
   const subLocations = SUB_LOCATIONS[locationType] || []
 
   useEffect(() => {
     if (item) {
+      setAmount(item.amount || '')
+      setUnit(item.unit || 'kpl')
       setName(item.name || '')
-      setWeight(item.weight || '')
       setIsNonInventory(item.is_non_inventory || false)
       setExpiryDate(item.expiry_date || '')
       setFrozenDate(item.frozen_date || '')
@@ -51,8 +54,9 @@ export default function AddShoppingItemModal({ item, locationType, onClose, onSa
 
     if (isNonInventory) {
       await onSave({
+        amount: amount.trim() || null,
+        unit: unit || null,
         name: name.trim(),
-        weight: null,
         category: null,
         expiry_date: null,
         frozen_date: null,
@@ -63,8 +67,9 @@ export default function AddShoppingItemModal({ item, locationType, onClose, onSa
       const isSpiceItem = isSpice(category)
       
       await onSave({
+        amount: amount.trim() || null,
+        unit: unit || null,
         name: name.trim(),
-        weight: weight.trim() || null,
         category,
         expiry_date: (inFreezer || isSpiceItem) ? null : (expiryDate || null),
         frozen_date: inFreezer ? (frozenDate || null) : null,
@@ -107,6 +112,35 @@ export default function AddShoppingItemModal({ item, locationType, onClose, onSa
             <span className={styles.toggleLabel}>Ei inventaarioon</span>
           </label>
 
+          <div className={styles.row}>
+            <div className={styles.field}>
+              <label className="label" htmlFor="amount">Määrä</label>
+              <input
+                ref={amountInputRef}
+                id="amount"
+                type="text"
+                className="input"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="1"
+                autoFocus
+              />
+            </div>
+            <div className={styles.field}>
+              <label className="label" htmlFor="unit">Yksikkö</label>
+              <select
+                id="unit"
+                className="input"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+              >
+                {UNITS.map(u => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className={styles.field}>
             <label className="label" htmlFor="name">Nimi *</label>
             <input
@@ -117,7 +151,6 @@ export default function AddShoppingItemModal({ item, locationType, onClose, onSa
               onChange={(e) => setName(e.target.value)}
               placeholder={isNonInventory ? "esim. Tiskiharja" : "esim. Kanafile"}
               required
-              autoFocus
             />
           </div>
 
@@ -153,18 +186,6 @@ export default function AddShoppingItemModal({ item, locationType, onClose, onSa
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div className={styles.field}>
-                <label className="label" htmlFor="weight">Määrä (valinnainen)</label>
-                <input
-                  id="weight"
-                  type="text"
-                  className="input"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  placeholder="esim. 500g"
-                />
               </div>
 
               {showFrozenDate && (

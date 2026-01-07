@@ -147,7 +147,8 @@ export default function ShoppingList({ locationType, onItemsAdded }) {
           location_type: locationType,
           name: item.name,
           category: item.category,
-          weight: item.weight,
+          amount: item.amount,
+          unit: item.unit,
           expiry_date: inFreezer ? null : (item.expiry_date || null),
           frozen_date: inFreezer ? (item.frozen_date || new Date().toISOString().split('T')[0]) : null,
         }])
@@ -240,11 +241,12 @@ export default function ShoppingList({ locationType, onItemsAdded }) {
                     className={styles.itemInfo}
                     onClick={() => handleToggleItem(item)}
                   >
-                    <span className={styles.itemName}>{item.name}</span>
+                    <span className={styles.itemName}>
+                      {item.amount && `${item.amount} ${item.unit || ''} `}{item.name}
+                    </span>
                     {!item.is_non_inventory && category && (
                       <span className={styles.itemMeta}>
                         {category.icon} {category.name}
-                        {item.weight && ` · ${item.weight}`}
                       </span>
                     )}
                     {item.is_non_inventory && (

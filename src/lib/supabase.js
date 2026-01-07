@@ -73,6 +73,30 @@ export const RECIPE_CATEGORIES = [
   { id: 'makea', name: 'Makea', icon: '🍰' },
 ]
 
+// Measurement units for recipes
+export const UNITS = [
+  { id: 'kpl', name: 'kpl' },
+  { id: 'g', name: 'g' },
+  { id: 'kg', name: 'kg' },
+  { id: 'ml', name: 'ml' },
+  { id: 'dl', name: 'dl' },
+  { id: 'l', name: 'l' },
+  { id: 'tl', name: 'tl' },
+  { id: 'rkl', name: 'rkl' },
+  { id: 'ripaus', name: 'ripaus' },
+]
+
+// Parse amount range and return max value (e.g. "2-3" returns "3", "2" returns "2")
+export const getMaxAmount = (amount) => {
+  if (!amount) return null
+  const str = String(amount).trim()
+  if (str.includes('-')) {
+    const parts = str.split('-')
+    return parts[parts.length - 1].trim()
+  }
+  return str
+}
+
 // Freezer expiry times in days
 export const FREEZER_EXPIRY_DAYS = {
   pakastin_kana: 90,        // 3 months

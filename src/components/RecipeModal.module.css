@@ -66,13 +66,19 @@
   font-size: 1rem;
 }
 
+.ingredientAmount {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
 .ingredientName {
   flex: 1;
   font-size: 0.875rem;
-}
-
-.ingredientAmount {
-  color: var(--text-muted);
 }
 
 .removeIngBtn {
@@ -128,5 +134,9 @@
 }
 
 .amountInput {
-  max-width: 6rem;
+  max-width: 5rem;
+}
+
+.unitSelect {
+  max-width: 5rem;
 }

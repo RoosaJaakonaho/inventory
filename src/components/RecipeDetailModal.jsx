@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase, getRecipeCategoryById, getCategoryById } from '../lib/supabase'
+import { supabase, getRecipeCategoryById, getCategoryById, getMaxAmount } from '../lib/supabase'
 import styles from './RecipeDetailModal.module.css'
 import modalStyles from './Modal.module.css'
 
@@ -36,13 +36,17 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
     const ingredientsToAdd = ingredients.filter(ing => selectedIngredients.includes(ing.id))
 
     for (const ing of ingredientsToAdd) {
+      // Use max value from range (e.g. "2-3" -> "3")
+      const maxAmount = getMaxAmount(ing.amount)
+      
       await supabase
         .from('shopping_list')
         .insert([{
           location_type: targetLocation,
           name: ing.name,
           category: ing.category,
-          weight: ing.amount,
+          amount: maxAmount,
+          unit: ing.unit,
           checked: false,
           is_non_inventory: false,
         }])
@@ -116,7 +120,11 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
                         )}
                       </div>
                       <span className={styles.ingIcon}>{cat.icon}</span>
-                      {ing.amount && <span className={styles.ingAmount}>{ing.amount}</span>}
+                      {ing.amount && (
+                        <span className={styles.ingAmount}>
+                          {ing.amount} {ing.unit || ''}
+                        </span>
+                      )}
                       <span className={styles.ingName}>{ing.name}</span>
                     </div>
                   )

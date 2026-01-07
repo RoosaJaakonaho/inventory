@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { RECIPE_CATEGORIES, SUB_LOCATIONS, CATEGORIES, getCategoryById } from '../lib/supabase'
+import { RECIPE_CATEGORIES, SUB_LOCATIONS, CATEGORIES, UNITS, getCategoryById } from '../lib/supabase'
 import styles from './RecipeModal.module.css'
 import modalStyles from './Modal.module.css'
 
@@ -10,13 +10,14 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
   const [ingredients, setIngredients] = useState([])
   const [loading, setLoading] = useState(false)
 
-  // New ingredient form
-  const [newIngName, setNewIngName] = useState('')
+  // New ingredient form - order: amount, unit, name, storage
   const [newIngAmount, setNewIngAmount] = useState('')
+  const [newIngUnit, setNewIngUnit] = useState('kpl')
+  const [newIngName, setNewIngName] = useState('')
   const [newIngSubLocation, setNewIngSubLocation] = useState('pakastin')
   const [newIngCategory, setNewIngCategory] = useState('pakastin_kana')
   const [editingIngredientIndex, setEditingIngredientIndex] = useState(null)
-  const ingredientInputRef = useRef(null)
+  const amountInputRef = useRef(null)
 
   useEffect(() => {
     if (recipe) {
@@ -40,6 +41,7 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
     const newIngredient = {
       name: newIngName.trim(),
       amount: newIngAmount.trim() || null,
+      unit: newIngUnit || null,
       sub_location: newIngSubLocation,
       category: newIngCategory,
     }
@@ -55,27 +57,30 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
       setIngredients([...ingredients, newIngredient])
     }
     
-    setNewIngName('')
     setNewIngAmount('')
+    setNewIngUnit('kpl')
+    setNewIngName('')
     
-    // Focus back to ingredient name input
-    ingredientInputRef.current?.focus()
+    // Focus back to amount input
+    amountInputRef.current?.focus()
   }
 
   const handleEditIngredient = (index) => {
     const ing = ingredients[index]
-    setNewIngName(ing.name)
     setNewIngAmount(ing.amount || '')
+    setNewIngUnit(ing.unit || 'kpl')
+    setNewIngName(ing.name)
     setNewIngSubLocation(ing.sub_location)
     setNewIngCategory(ing.category)
     setEditingIngredientIndex(index)
-    ingredientInputRef.current?.focus()
+    amountInputRef.current?.focus()
   }
 
   const handleCancelEdit = () => {
     setEditingIngredientIndex(null)
-    setNewIngName('')
     setNewIngAmount('')
+    setNewIngUnit('kpl')
+    setNewIngName('')
   }
 
   const handleRemoveIngredient = (index) => {
@@ -117,6 +122,7 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
       ingredients.map(ing => ({
         name: ing.name,
         amount: ing.amount,
+        unit: ing.unit,
         sub_location: ing.sub_location,
         category: ing.category,
       }))
@@ -225,10 +231,12 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
                         </button>
                       </div>
                       <span className={styles.ingredientIcon}>{cat.icon}</span>
-                      <span className={styles.ingredientName}>
-                        {ing.name}
-                        {ing.amount && <span className={styles.ingredientAmount}> ({ing.amount})</span>}
-                      </span>
+                      {ing.amount && (
+                        <span className={styles.ingredientAmount}>
+                          {ing.amount} {ing.unit || ''}
+                        </span>
+                      )}
+                      <span className={styles.ingredientName}>{ing.name}</span>
                       <button 
                         type="button"
                         className={styles.editIngBtn}
@@ -259,19 +267,30 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
             <div className={styles.addIngredient}>
               <div className={styles.ingRow}>
                 <input
-                  ref={ingredientInputRef}
+                  ref={amountInputRef}
+                  type="text"
+                  className={`input ${styles.amountInput}`}
+                  value={newIngAmount}
+                  onChange={(e) => setNewIngAmount(e.target.value)}
+                  placeholder="1-2"
+                />
+                <select
+                  className={`input ${styles.unitSelect}`}
+                  value={newIngUnit}
+                  onChange={(e) => setNewIngUnit(e.target.value)}
+                >
+                  {UNITS.map(unit => (
+                    <option key={unit.id} value={unit.id}>
+                      {unit.name}
+                    </option>
+                  ))}
+                </select>
+                <input
                   type="text"
                   className="input"
                   value={newIngName}
                   onChange={(e) => setNewIngName(e.target.value)}
                   placeholder="Ainesosa"
-                />
-                <input
-                  type="text"
-                  className={`input ${styles.amountInput}`}
-                  value={newIngAmount}
-                  onChange={(e) => setNewIngAmount(e.target.value)}
-                  placeholder="Määrä"
                 />
               </div>
               <div className={styles.ingRow}>
