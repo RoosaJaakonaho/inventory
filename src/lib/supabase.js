@@ -40,6 +40,7 @@ export const CATEGORIES = {
     { id: 'pakastin_muu', name: 'Muu', icon: '📦' },
   ],
   jaakaappi: [
+    { id: 'jaakaappi_kasvikset', name: 'Kasvikset', icon: '🥬' },
     { id: 'jaakaappi_sailykkeet', name: 'Säilykkeet', icon: '🥫' },
     { id: 'jaakaappi_muut', name: 'Muut', icon: '📦' },
   ],
