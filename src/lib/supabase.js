@@ -44,8 +44,7 @@ export const CATEGORIES = {
     { id: 'jaakaappi_muut', name: 'Muut', icon: '📦' },
   ],
   kuiva: [
-    { id: 'kuiva_pasta', name: 'Pasta', icon: '🍝' },
-    { id: 'kuiva_riisi', name: 'Riisi', icon: '🍚' },
+    { id: 'kuiva_vilja', name: 'Viljatuotteet', icon: '🌾' },
     { id: 'kuiva_sailykkeet', name: 'Säilykkeet', icon: '🥫' },
     { id: 'kuiva_snax', name: 'Snäx', icon: '🍿' },
     { id: 'kuiva_leivonta', name: 'Leivonta', icon: '🧁' },
