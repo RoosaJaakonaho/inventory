@@ -1,0 +1,96 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 8rem);
+  padding: 1rem;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100dvh - 8rem);
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 0.1875rem solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Issues section */
+.issuesSection {
+  flex: 1;
+}
+
+.allGood {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.allGoodIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.allGood p {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.allGoodSub {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.issuesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.issueGroup {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  border: 1px solid var(--border);
+}
+
+.issueTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.issueBadge {
+  background: var(--primary);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  margin-left: auto;
+}
+
+.issueItems {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

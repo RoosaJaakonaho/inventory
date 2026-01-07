@@ -19,7 +19,7 @@ import ShoppingList from './ShoppingList'
 import ConfirmModal from '../components/ConfirmModal'
 import styles from './LocationView.module.css'
 
-export default function LocationView({ locationType }) {
+export default function LocationView({ locationType, activeView }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -27,7 +27,6 @@ export default function LocationView({ locationType }) {
   const [deleteItem, setDeleteItem] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterSubLocation, setFilterSubLocation] = useState('')
-  const [activeTab, setActiveTab] = useState('varasto')
 
   const subLocations = SUB_LOCATIONS[locationType] || []
 
@@ -120,34 +119,6 @@ export default function LocationView({ locationType }) {
     })
   }, [items, searchQuery, filterSubLocation])
 
-  // Get expiring items (within 2-3 weeks) - memoized
-  const expiringItems = useMemo(() => {
-    return items.filter(item => {
-      const expiryDate = getItemExpiryDate(item)
-      return isExpiringSoon(expiryDate)
-    })
-  }, [items])
-
-  // Items without expiry date (excluding spices and items that don't need dates) - memoized
-  const itemsWithoutDate = useMemo(() => {
-    return items.filter(item => {
-      if (isSpice(item.category)) return false
-      if (isInFreezer(item.category)) {
-        return !item.frozen_date
-      }
-      return !item.expiry_date
-    })
-  }, [items])
-
-  // Combined "vanhentuvat" view items - memoized
-  const vanhenevatItems = useMemo(() => {
-    return [...expiringItems, ...itemsWithoutDate].filter(
-      (item, index, self) => self.findIndex(i => i.id === item.id) === index
-    )
-  }, [expiringItems, itemsWithoutDate])
-
-  const expiringCount = vanhenevatItems.length
-
   if (loading) {
     return (
       <div className={styles.loading}>
@@ -158,78 +129,7 @@ export default function LocationView({ locationType }) {
 
   return (
     <div className={styles.wrapper}>
-      {/* Tab toggle */}
-      <div className={styles.tabToggle}>
-        <button
-          className={`${styles.tab} ${activeTab === 'vanhentuvat' ? styles.active : ''}`}
-          onClick={() => setActiveTab('vanhentuvat')}
-        >
-          ⚠️ Vanhentuvat
-          {expiringCount > 0 && <span className={styles.badge}>{expiringCount}</span>}
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'varasto' ? styles.active : ''}`}
-          onClick={() => setActiveTab('varasto')}
-        >
-          📦 Varasto
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'kauppalista' ? styles.active : ''}`}
-          onClick={() => setActiveTab('kauppalista')}
-        >
-          🛒 Kauppalista
-        </button>
-      </div>
-
-      {activeTab === 'vanhentuvat' && (
-        <div className={styles.mainContent}>
-          {vanhenevatItems.length === 0 ? (
-            <div className={styles.empty}>
-              <div className={styles.emptyIcon}>✨</div>
-              <p>Ei vanhentuvia tuotteita</p>
-            </div>
-          ) : (
-            <div className={styles.itemsList}>
-              {itemsWithoutDate.length > 0 && (
-                <div className={styles.section}>
-                  <h3 className={styles.sectionTitle}>📝 Lisää päiväys</h3>
-                  {itemsWithoutDate.map(item => (
-                    <ItemCard
-                      key={item.id}
-                      item={item}
-                      expiryDate={getItemExpiryDate(item)}
-                      onEdit={() => {
-                        setEditingItem(item)
-                        setShowAddModal(true)
-                      }}
-                      onDelete={() => setDeleteItem(item)}
-                    />
-                  ))}
-                </div>
-              )}
-              {expiringItems.length > 0 && (
-                <div className={styles.section}>
-                  <h3 className={styles.sectionTitle}>⏰ Vanhenemassa 3 viikon sisällä</h3>
-                  {expiringItems.map(item => (
-                    <ItemCard
-                      key={item.id}
-                      item={item}
-                      expiryDate={getItemExpiryDate(item)}
-                      onEdit={() => {
-                        setEditingItem(item)
-                        setShowAddModal(true)
-                      }}
-                      onDelete={() => setDeleteItem(item)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'varasto' && (
+      {activeView === 'varasto' && (
         <>
           {/* Search and filters */}
           <div className={styles.filters}>
@@ -314,7 +214,7 @@ export default function LocationView({ locationType }) {
         </>
       )}
 
-      {activeTab === 'kauppalista' && (
+      {activeView === 'kauppalista' && (
         <ShoppingList 
           locationType={locationType} 
           onItemsAdded={fetchItems}

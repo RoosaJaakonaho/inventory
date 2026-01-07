@@ -2,8 +2,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px;
+  gap: 0.75rem;
+  padding: 0.875rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -18,7 +18,7 @@
 .content {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
   min-width: 0;
   flex: 1;
 }
@@ -26,8 +26,8 @@
 .icon {
   font-size: 1.5rem;
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 2.5rem;
+  height: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -43,9 +43,9 @@
 .header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  margin-bottom: 2px;
+  margin-bottom: 0.125rem;
 }
 
 .name {
@@ -59,7 +59,7 @@
 .meta {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.25rem;
   font-size: 0.75rem;
   color: var(--text-secondary);
   flex-wrap: wrap;
@@ -81,17 +81,17 @@
 .dateLine {
   font-size: 0.6875rem;
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 0.125rem;
 }
 
 .actions {
   display: flex;
-  gap: 4px;
+  gap: 0.25rem;
   flex-shrink: 0;
 }
 
 .actionBtn {
-  padding: 8px;
+  padding: 0.5rem;
   color: var(--text-secondary);
   border-radius: var(--radius-sm);
   transition: all 0.15s;

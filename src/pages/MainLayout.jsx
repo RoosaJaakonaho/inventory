@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../lib/auth'
+import LocationHome from './LocationHome'
 import LocationView from './LocationView'
 import Recipes from './Recipes'
 import styles from './MainLayout.module.css'
@@ -7,16 +8,12 @@ import styles from './MainLayout.module.css'
 export default function MainLayout() {
   const { signOut } = useAuth()
   const [activeTab, setActiveTab] = useState('koti') // 'koti', 'mokki', 'reseptit'
+  const [locationView, setLocationView] = useState(null) // null = etusivu, 'varasto', 'kauppalista'
 
   return (
     <div className={styles.wrapper}>
-      {/* Header */}
+      {/* Header with logout */}
       <header className={styles.header}>
-        <h1 className={styles.title}>
-          {activeTab === 'koti' && '🏠 Koti'}
-          {activeTab === 'mokki' && '🏡 Mökki'}
-          {activeTab === 'reseptit' && '📖 Reseptit'}
-        </h1>
         <button 
           className={styles.logoutBtn}
           onClick={signOut}
@@ -30,37 +27,77 @@ export default function MainLayout() {
         </button>
       </header>
 
-      {/* Content */}
-      <main className={styles.content}>
-        {activeTab === 'koti' && <LocationView locationType="koti" />}
-        {activeTab === 'mokki' && <LocationView locationType="mokki" />}
-        {activeTab === 'reseptit' && <Recipes />}
-      </main>
-
-      {/* Bottom Navigation */}
-      <nav className={styles.bottomNav}>
+      {/* Main navigation tabs */}
+      <nav className={styles.mainNav}>
         <button
-          className={`${styles.navBtn} ${activeTab === 'koti' ? styles.active : ''}`}
-          onClick={() => setActiveTab('koti')}
+          className={`${styles.mainTab} ${activeTab === 'koti' ? styles.active : ''}`}
+          onClick={() => {
+            setActiveTab('koti')
+            setLocationView(null)
+          }}
         >
-          <span className={styles.navIcon}>🏠</span>
-          <span className={styles.navLabel}>Koti</span>
+          🏠 Koti
         </button>
         <button
-          className={`${styles.navBtn} ${activeTab === 'mokki' ? styles.active : ''}`}
-          onClick={() => setActiveTab('mokki')}
+          className={`${styles.mainTab} ${activeTab === 'mokki' ? styles.active : ''}`}
+          onClick={() => {
+            setActiveTab('mokki')
+            setLocationView(null)
+          }}
         >
-          <span className={styles.navIcon}>🏡</span>
-          <span className={styles.navLabel}>Mökki</span>
+          🏡 Mökki
         </button>
         <button
-          className={`${styles.navBtn} ${activeTab === 'reseptit' ? styles.active : ''}`}
-          onClick={() => setActiveTab('reseptit')}
+          className={`${styles.mainTab} ${activeTab === 'reseptit' ? styles.active : ''}`}
+          onClick={() => {
+            setActiveTab('reseptit')
+            setLocationView(null)
+          }}
         >
-          <span className={styles.navIcon}>📖</span>
-          <span className={styles.navLabel}>Reseptit</span>
+          📖 Reseptit
         </button>
       </nav>
+
+      {/* Sub navigation for Koti/Mökki */}
+      {activeTab !== 'reseptit' && (
+        <nav className={styles.subNav}>
+          <button
+            className={`${styles.subTab} ${!locationView ? styles.active : ''}`}
+            onClick={() => setLocationView(null)}
+          >
+            ⚠️ Tarkista
+          </button>
+          <button
+            className={`${styles.subTab} ${locationView === 'varasto' ? styles.active : ''}`}
+            onClick={() => setLocationView('varasto')}
+          >
+            📦 Varasto
+          </button>
+          <button
+            className={`${styles.subTab} ${locationView === 'kauppalista' ? styles.active : ''}`}
+            onClick={() => setLocationView('kauppalista')}
+          >
+            🛒 Kauppalista
+          </button>
+        </nav>
+      )}
+
+      {/* Content */}
+      <main className={styles.content}>
+        {activeTab === 'koti' && !locationView && (
+          <LocationHome locationType="koti" />
+        )}
+        {activeTab === 'koti' && locationView && (
+          <LocationView locationType="koti" activeView={locationView} />
+        )}
+        {activeTab === 'mokki' && !locationView && (
+          <LocationHome locationType="mokki" />
+        )}
+        {activeTab === 'mokki' && locationView && (
+          <LocationView locationType="mokki" activeView={locationView} />
+        )}
+        {activeTab === 'reseptit' && <Recipes />}
+      </main>
     </div>
   )
 }
