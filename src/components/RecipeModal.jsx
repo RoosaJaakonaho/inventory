@@ -1,7 +1,87 @@
 import { useState, useEffect, useRef } from 'react'
+import {
+  DndContext,
+  closestCenter,
+  TouchSensor,
+  MouseSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { RECIPE_CATEGORIES, SUB_LOCATIONS, CATEGORIES, UNITS, getCategoryById } from '../lib/supabase'
 import styles from './RecipeModal.module.css'
 import modalStyles from './Modal.module.css'
+
+function SortableIngredient({ ingredient, index, isEditing, onEdit, onRemove }) {
+  const cat = getCategoryById(ingredient.category)
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: `ing-${index}` })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.8 : 1,
+    zIndex: isDragging ? 10 : 1,
+  }
+
+  return (
+    <div 
+      ref={setNodeRef}
+      style={style}
+      className={`${styles.ingredientItem} ${isEditing ? styles.editing : ''} ${isDragging ? styles.dragging : ''}`}
+    >
+      <div className={styles.dragHandle} {...attributes} {...listeners}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="9" cy="6" r="1.5"/>
+          <circle cx="15" cy="6" r="1.5"/>
+          <circle cx="9" cy="12" r="1.5"/>
+          <circle cx="15" cy="12" r="1.5"/>
+          <circle cx="9" cy="18" r="1.5"/>
+          <circle cx="15" cy="18" r="1.5"/>
+        </svg>
+      </div>
+      <span className={styles.ingredientIcon}>{cat.icon}</span>
+      {ingredient.amount && (
+        <span className={styles.ingredientAmount}>
+          {ingredient.amount} {ingredient.unit || ''}
+        </span>
+      )}
+      <span className={styles.ingredientName}>{ingredient.name}</span>
+      <button 
+        type="button"
+        className={styles.editIngBtn}
+        onClick={() => onEdit(index)}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>
+      <button 
+        type="button"
+        className={styles.removeIngBtn}
+        onClick={() => onRemove(index)}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  )
+}
 
 export default function RecipeModal({ recipe, onClose, onSave }) {
   const [name, setName] = useState('')
@@ -19,6 +99,15 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
   const [editingIngredientIndex, setEditingIngredientIndex] = useState(null)
   const amountInputRef = useRef(null)
 
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 100, tolerance: 5 },
+    })
+  )
+
   useEffect(() => {
     if (recipe) {
       setName(recipe.name || '')
@@ -34,6 +123,23 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
       setNewIngCategory(CATEGORIES[newIngSubLocation][0]?.id || '')
     }
   }, [newIngSubLocation])
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = parseInt(active.id.replace('ing-', ''))
+    const newIndex = parseInt(over.id.replace('ing-', ''))
+    
+    setIngredients(arrayMove(ingredients, oldIndex, newIndex))
+    
+    // Update editing index if needed
+    if (editingIngredientIndex === oldIndex) {
+      setEditingIngredientIndex(newIndex)
+    } else if (editingIngredientIndex === newIndex) {
+      setEditingIngredientIndex(oldIndex)
+    }
+  }
 
   const handleAddIngredient = () => {
     if (!newIngName.trim()) return
@@ -89,23 +195,6 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
       setEditingIngredientIndex(null)
       setNewIngName('')
       setNewIngAmount('')
-    }
-  }
-
-  const handleMoveIngredient = (index, direction) => {
-    const newIndex = index + direction
-    if (newIndex < 0 || newIndex >= ingredients.length) return
-    
-    const updated = [...ingredients]
-    const [moved] = updated.splice(index, 1)
-    updated.splice(newIndex, 0, moved)
-    setIngredients(updated)
-    
-    // Update editing index if needed
-    if (editingIngredientIndex === index) {
-      setEditingIngredientIndex(newIndex)
-    } else if (editingIngredientIndex === newIndex) {
-      setEditingIngredientIndex(index)
     }
   }
 
@@ -198,69 +287,29 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
             <label className="label">Ainesosat</label>
             
             {ingredients.length > 0 && (
-              <div className={styles.ingredientsList}>
-                {ingredients.map((ing, idx) => {
-                  const cat = getCategoryById(ing.category)
-                  const isEditing = editingIngredientIndex === idx
-                  const isFirst = idx === 0
-                  const isLast = idx === ingredients.length - 1
-                  return (
-                    <div key={idx} className={`${styles.ingredientItem} ${isEditing ? styles.editing : ''}`}>
-                      <div className={styles.moveButtons}>
-                        <button 
-                          type="button"
-                          className={styles.moveBtn}
-                          onClick={() => handleMoveIngredient(idx, -1)}
-                          disabled={isFirst}
-                          title="Siirrä ylös"
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="18 15 12 9 6 15"/>
-                          </svg>
-                        </button>
-                        <button 
-                          type="button"
-                          className={styles.moveBtn}
-                          onClick={() => handleMoveIngredient(idx, 1)}
-                          disabled={isLast}
-                          title="Siirrä alas"
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="6 9 12 15 18 9"/>
-                          </svg>
-                        </button>
-                      </div>
-                      <span className={styles.ingredientIcon}>{cat.icon}</span>
-                      {ing.amount && (
-                        <span className={styles.ingredientAmount}>
-                          {ing.amount} {ing.unit || ''}
-                        </span>
-                      )}
-                      <span className={styles.ingredientName}>{ing.name}</span>
-                      <button 
-                        type="button"
-                        className={styles.editIngBtn}
-                        onClick={() => handleEditIngredient(idx)}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                      </button>
-                      <button 
-                        type="button"
-                        className={styles.removeIngBtn}
-                        onClick={() => handleRemoveIngredient(idx)}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="18" y1="6" x2="6" y2="18"/>
-                          <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext 
+                  items={ingredients.map((_, idx) => `ing-${idx}`)} 
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className={styles.ingredientsList}>
+                    {ingredients.map((ing, idx) => (
+                      <SortableIngredient
+                        key={idx}
+                        ingredient={ing}
+                        index={idx}
+                        isEditing={editingIngredientIndex === idx}
+                        onEdit={handleEditIngredient}
+                        onRemove={handleRemoveIngredient}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
 
             {/* Add ingredient form */}

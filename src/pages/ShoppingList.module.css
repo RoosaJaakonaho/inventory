@@ -66,27 +66,23 @@
   transition: all 0.15s;
 }
 
-.moveButtons {
+.dragHandle {
   display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
-.moveBtn {
-  padding: 0.125rem;
+  align-items: center;
+  justify-content: center;
   color: var(--text-muted);
-  border-radius: var(--radius-sm);
-  transition: all 0.15s;
+  cursor: grab;
+  padding: 0.25rem;
+  touch-action: none;
 }
 
-.moveBtn:hover:not(:disabled) {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+.dragHandle:active {
+  cursor: grabbing;
 }
 
-.moveBtn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+.item.dragging {
+  background: var(--bg-tertiary);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.3);
 }
 
 .item:hover {

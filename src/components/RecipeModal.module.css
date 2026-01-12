@@ -39,27 +39,23 @@
   border: 1px solid transparent;
 }
 
-.moveButtons {
+.dragHandle {
   display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
-.moveBtn {
-  padding: 0.125rem;
+  align-items: center;
+  justify-content: center;
   color: var(--text-muted);
-  border-radius: var(--radius-sm);
-  transition: all 0.15s;
+  cursor: grab;
+  padding: 0.125rem;
+  touch-action: none;
 }
 
-.moveBtn:hover:not(:disabled) {
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.ingredientItem.dragging {
   background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.moveBtn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+  box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.3);
 }
 
 .ingredientIcon {
