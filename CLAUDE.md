@@ -59,3 +59,17 @@ All configuration is centralized in `supabase.js`:
 ## Language
 
 All UI text is in Finnish. Variable names and code comments are in English.
+
+## Code Style Rules
+
+**CSS - No hardcoded values:**
+- No hardcoded pixel values for layout (use `%`, `rem`, `em`, `vh`, `vw`, flexbox, grid)
+- No magic numbers - use CSS variables if a value needs to be reused
+- No `position: absolute` hacks for layout - use proper flexbox/grid
+- No `!important` unless absolutely necessary
+- No inline styles in JSX
+
+**General - No hacks:**
+- No setTimeout/setInterval hacks to "fix" rendering issues
+- No z-index wars (keep z-index values minimal and documented)
+- If something needs a hack to work, the underlying problem should be fixed instead
