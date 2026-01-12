@@ -136,3 +136,13 @@
 .unitSelect {
   max-width: 5rem;
 }
+
+.noCategoryActive {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
+
+.ingActionsSpacer {
+  flex: 1;
+}

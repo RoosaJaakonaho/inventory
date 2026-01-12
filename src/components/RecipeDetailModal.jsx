@@ -69,11 +69,11 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
         .insert([{
           location_type: targetLocation,
           name: ing.name,
-          category: ing.category,
+          category: ing.category || null,
           amount: maxAmount,
           unit: ing.unit,
           checked: false,
-          is_non_inventory: false,
+          is_non_inventory: !ing.category,
         }])
     }
 
@@ -151,7 +151,7 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
               
               <div className={styles.ingredientsList}>
                 {ingredients.map(ing => {
-                  const cat = getCategoryById(ing.category)
+                  const cat = ing.category ? getCategoryById(ing.category) : null
                   const isSelected = selectedIngredients.includes(ing.id)
                   const scaledAmount = scaleAmount(ing.amount, scale)
                   return (
@@ -167,7 +167,7 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
                           </svg>
                         )}
                       </div>
-                      <span className={styles.ingIcon}>{cat.icon}</span>
+                      <span className={styles.ingIcon}>{cat ? cat.icon : '📝'}</span>
                       {scaledAmount && (
                         <span className={styles.ingAmount}>
                           {scaledAmount} {ing.unit || ''}

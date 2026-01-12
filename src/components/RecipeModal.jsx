@@ -19,7 +19,7 @@ import styles from './RecipeModal.module.css'
 import modalStyles from './Modal.module.css'
 
 function SortableIngredient({ ingredient, index, isEditing, onEdit, onRemove }) {
-  const cat = getCategoryById(ingredient.category)
+  const cat = ingredient.category ? getCategoryById(ingredient.category) : null
   const {
     attributes,
     listeners,
@@ -52,7 +52,7 @@ function SortableIngredient({ ingredient, index, isEditing, onEdit, onRemove }) 
           <circle cx="15" cy="18" r="1.5"/>
         </svg>
       </div>
-      <span className={styles.ingredientIcon}>{cat.icon}</span>
+      <span className={styles.ingredientIcon}>{cat ? cat.icon : '📝'}</span>
       {ingredient.amount && (
         <span className={styles.ingredientAmount}>
           {ingredient.amount} {ingredient.unit || ''}
@@ -94,6 +94,7 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
   const [newIngAmount, setNewIngAmount] = useState('')
   const [newIngUnit, setNewIngUnit] = useState('kpl')
   const [newIngName, setNewIngName] = useState('')
+  const [newIngNoCategory, setNewIngNoCategory] = useState(false)
   const [newIngSubLocation, setNewIngSubLocation] = useState('pakastin')
   const [newIngCategory, setNewIngCategory] = useState('pakastin_kana')
   const [editingIngredientIndex, setEditingIngredientIndex] = useState(null)
@@ -148,8 +149,8 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
       name: newIngName.trim(),
       amount: newIngAmount.trim() || null,
       unit: newIngUnit || null,
-      sub_location: newIngSubLocation,
-      category: newIngCategory,
+      sub_location: newIngNoCategory ? null : newIngSubLocation,
+      category: newIngNoCategory ? null : newIngCategory,
     }
 
     if (editingIngredientIndex !== null) {
@@ -162,11 +163,12 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
       // Add new ingredient
       setIngredients([...ingredients, newIngredient])
     }
-    
+
     setNewIngAmount('')
     setNewIngUnit('kpl')
     setNewIngName('')
-    
+    setNewIngNoCategory(false)
+
     // Focus back to amount input
     amountInputRef.current?.focus()
   }
@@ -176,8 +178,9 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
     setNewIngAmount(ing.amount || '')
     setNewIngUnit(ing.unit || 'kpl')
     setNewIngName(ing.name)
-    setNewIngSubLocation(ing.sub_location)
-    setNewIngCategory(ing.category)
+    setNewIngNoCategory(!ing.category)
+    setNewIngSubLocation(ing.sub_location || 'pakastin')
+    setNewIngCategory(ing.category || 'pakastin_kana')
     setEditingIngredientIndex(index)
     amountInputRef.current?.focus()
   }
@@ -187,6 +190,7 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
     setNewIngAmount('')
     setNewIngUnit('kpl')
     setNewIngName('')
+    setNewIngNoCategory(false)
   }
 
   const handleRemoveIngredient = (index) => {
@@ -342,33 +346,43 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
                   placeholder="Ainesosa"
                 />
               </div>
-              <div className={styles.ingRow}>
-                <select
-                  className="input"
-                  value={newIngSubLocation}
-                  onChange={(e) => setNewIngSubLocation(e.target.value)}
-                >
-                  {allSubLocations.map(sub => (
-                    <option key={sub.id} value={sub.id}>
-                      {sub.icon} {sub.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="input"
-                  value={newIngCategory}
-                  onChange={(e) => setNewIngCategory(e.target.value)}
-                >
-                  {currentCategories.map(cat => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.icon} {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {!newIngNoCategory && (
+                <div className={styles.ingRow}>
+                  <select
+                    className="input"
+                    value={newIngSubLocation}
+                    onChange={(e) => setNewIngSubLocation(e.target.value)}
+                  >
+                    {allSubLocations.map(sub => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.icon} {sub.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="input"
+                    value={newIngCategory}
+                    onChange={(e) => setNewIngCategory(e.target.value)}
+                  >
+                    {currentCategories.map(cat => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.icon} {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className={styles.ingActions}>
+                <button
+                  type="button"
+                  className={`btn btn-sm ${newIngNoCategory ? styles.noCategoryActive : 'btn-secondary'}`}
+                  onClick={() => setNewIngNoCategory(!newIngNoCategory)}
+                >
+                  {newIngNoCategory ? '✓ Ei kategoriaa' : 'Ei kategoriaa'}
+                </button>
+                <div className={styles.ingActionsSpacer} />
                 {editingIngredientIndex !== null && (
-                  <button 
+                  <button
                     type="button"
                     className="btn btn-secondary btn-sm"
                     onClick={handleCancelEdit}
@@ -376,7 +390,7 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
                     Peruuta
                   </button>
                 )}
-                <button 
+                <button
                   type="button"
                   className="btn btn-secondary btn-sm"
                   onClick={handleAddIngredient}
