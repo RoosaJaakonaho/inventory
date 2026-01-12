@@ -60,6 +60,10 @@ All configuration is centralized in `supabase.js`:
 
 All UI text is in Finnish. Variable names and code comments are in English.
 
+## Working Style
+
+**Always ask questions when something is unclear.** Don't assume - clarify requirements before implementing.
+
 ## Code Style Rules
 
 **CSS - No hardcoded values:**
