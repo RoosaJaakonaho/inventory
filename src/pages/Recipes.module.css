@@ -96,6 +96,35 @@
   border-color: var(--text-primary);
 }
 
+/* Letter jump bar */
+.letterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.letterBtn {
+  min-width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+}
+
+.letterBtn:hover {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+
 /* Main content */
 .mainContent {
   padding: 1rem;
@@ -117,6 +146,25 @@
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
+}
+
+.letterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.letterGroup:not(:first-child) {
+  margin-top: 1rem;
+}
+
+.letterHeader {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding: 0.5rem 0;
+  border-bottom: 2px solid var(--border);
+  scroll-margin-top: 1rem;
 }
 
 .recipeCard {
