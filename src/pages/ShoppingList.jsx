@@ -24,6 +24,7 @@ import {
   calculateFreezerExpiry,
 } from '../lib/supabase'
 import AddShoppingItemModal from '../components/AddShoppingItemModal'
+import ConfirmModal from '../components/ConfirmModal'
 import styles from './ShoppingList.module.css'
 
 function SortableItem({ item, onToggle, onEdit, onDelete }) {
@@ -114,6 +115,7 @@ export default function ShoppingList({ locationType, onItemsAdded }) {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   const [finishing, setFinishing] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -229,10 +231,25 @@ export default function ShoppingList({ locationType, onItemsAdded }) {
     setItems(items.filter(i => i.id !== item.id))
   }
 
+  const handleFinishClick = () => {
+    const checkedItems = items.filter(i => i.checked)
+    if (checkedItems.length === 0) return
+
+    // Check if any items will be added to inventory
+    const inventoryItems = checkedItems.filter(i => !i.is_non_inventory)
+    if (inventoryItems.length > 0) {
+      setShowConfirmModal(true)
+    } else {
+      // Only non-inventory items, proceed without confirmation
+      handleFinishShopping()
+    }
+  }
+
   const handleFinishShopping = async () => {
     const checkedItems = items.filter(i => i.checked)
     if (checkedItems.length === 0) return
 
+    setShowConfirmModal(false)
     setFinishing(true)
 
     for (const item of checkedItems) {
@@ -247,7 +264,7 @@ export default function ShoppingList({ locationType, onItemsAdded }) {
 
       // Add food items to inventory
       const inFreezer = isInFreezer(item.category)
-      
+
       const { error: insertError } = await supabase
         .from('items')
         .insert([{
@@ -327,9 +344,9 @@ export default function ShoppingList({ locationType, onItemsAdded }) {
 
           {checkedCount > 0 && (
             <div className={styles.finishBar}>
-              <button 
+              <button
                 className="btn btn-primary w-full"
-                onClick={handleFinishShopping}
+                onClick={handleFinishClick}
                 disabled={finishing}
               >
                 {finishing ? 'Lisätään...' : `Valmis (${checkedCount} tuotetta)`}
@@ -363,6 +380,39 @@ export default function ShoppingList({ locationType, onItemsAdded }) {
           }}
           onSave={editingItem ? handleUpdateItem : handleAddItem}
         />
+      )}
+
+      {showConfirmModal && (
+        <ConfirmModal
+          title="Lisää varastoon"
+          confirmText="Lisää varastoon"
+          confirmStyle="primary"
+          onConfirm={handleFinishShopping}
+          onCancel={() => setShowConfirmModal(false)}
+        >
+          <div className={styles.confirmList}>
+            <p className={styles.confirmMessage}>Lisätään varastoon:</p>
+            {items.filter(i => i.checked && !i.is_non_inventory).map(item => {
+              const category = item.category ? getCategoryById(item.category) : null
+              return (
+                <div key={item.id} className={styles.confirmItem}>
+                  {category && <span>{category.icon}</span>}
+                  <span>{item.amount && `${item.amount} ${item.unit || ''} `}{item.name}</span>
+                </div>
+              )
+            })}
+            {items.filter(i => i.checked && i.is_non_inventory).length > 0 && (
+              <>
+                <p className={styles.confirmMessage} style={{ marginTop: '0.75rem' }}>Poistetaan listalta:</p>
+                {items.filter(i => i.checked && i.is_non_inventory).map(item => (
+                  <div key={item.id} className={styles.confirmItem}>
+                    <span>{item.amount && `${item.amount} ${item.unit || ''} `}{item.name}</span>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        </ConfirmModal>
       )}
     </div>
   )

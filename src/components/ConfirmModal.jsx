@@ -1,6 +1,6 @@
 import styles from './Modal.module.css'
 
-export default function ConfirmModal({ title, message, confirmText, onConfirm, onCancel }) {
+export default function ConfirmModal({ title, message, confirmText, confirmStyle = 'danger', onConfirm, onCancel, children }) {
   return (
     <div className={styles.overlay} onClick={onCancel}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
@@ -9,19 +9,20 @@ export default function ConfirmModal({ title, message, confirmText, onConfirm, o
         </div>
 
         <div className={styles.form}>
-          <p className={styles.message}>{message}</p>
+          {message && <p className={styles.message}>{message}</p>}
+          {children}
 
           <div className={styles.actions}>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="btn btn-secondary"
               onClick={onCancel}
             >
               Peruuta
             </button>
-            <button 
-              type="button" 
-              className="btn btn-danger"
+            <button
+              type="button"
+              className={`btn btn-${confirmStyle}`}
               onClick={onConfirm}
             >
               {confirmText || 'Vahvista'}

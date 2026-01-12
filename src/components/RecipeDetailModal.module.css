@@ -47,6 +47,37 @@
   color: var(--text-secondary);
 }
 
+.scaleButtons {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.scaleBtn {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  transition: all 0.15s;
+}
+
+.scaleBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.scaleBtn.active {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
+
+.selectAllRow {
+  margin-bottom: 0.5rem;
+}
+
 .selectAllBtn {
   font-size: 0.75rem;
   color: var(--text-muted);

@@ -37,8 +37,9 @@
 }
 
 .list {
-  padding: 0 1rem;
+  padding: 1rem;
 }
+
 
 .group {
   margin-bottom: 1.25rem;
@@ -165,14 +166,8 @@
 }
 
 .finishBar {
-  position: fixed;
-  bottom: var(--nav-height);
-  left: 0;
-  right: 0;
   padding: 1rem;
-  padding-top: 2rem;
-  background: linear-gradient(to top, var(--bg-primary) 80%, transparent);
-  z-index: 30;
+  margin-top: 1rem;
 }
 
 .fab {
@@ -205,8 +200,33 @@
   .fab {
     right: 2rem;
   }
-  
+
   .deleteBtn {
     opacity: 0.5;
   }
+}
+
+/* Confirmation modal list */
+.confirmList {
+  max-height: 15rem;
+  overflow-y: auto;
+}
+
+.confirmMessage {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.confirmItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0;
+  font-size: 0.9375rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.confirmItem:last-child {
+  border-bottom: none;
 }

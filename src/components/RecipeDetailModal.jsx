@@ -3,11 +3,35 @@ import { supabase, getRecipeCategoryById, getCategoryById, getMaxAmount } from '
 import styles from './RecipeDetailModal.module.css'
 import modalStyles from './Modal.module.css'
 
+// Scale an amount string (handles ranges like "2-3" and decimals)
+const scaleAmount = (amount, scale) => {
+  if (!amount) return null
+  const str = String(amount).trim()
+
+  if (str.includes('-')) {
+    // Handle range like "2-3"
+    const parts = str.split('-')
+    const scaled = parts.map(p => {
+      const num = parseFloat(p.trim())
+      if (isNaN(num)) return p.trim()
+      const result = num * scale
+      return Number.isInteger(result) ? result : result.toFixed(1).replace(/\.0$/, '')
+    })
+    return scaled.join('-')
+  }
+
+  const num = parseFloat(str)
+  if (isNaN(num)) return str
+  const result = num * scale
+  return Number.isInteger(result) ? String(result) : result.toFixed(1).replace(/\.0$/, '')
+}
+
 export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
   const [selectedIngredients, setSelectedIngredients] = useState([])
   const [targetLocation, setTargetLocation] = useState('koti')
   const [adding, setAdding] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [scale, setScale] = useState(1)
 
   const category = getRecipeCategoryById(recipe.category)
   const ingredients = recipe.recipe_ingredients || []
@@ -36,9 +60,10 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
     const ingredientsToAdd = ingredients.filter(ing => selectedIngredients.includes(ing.id))
 
     for (const ing of ingredientsToAdd) {
-      // Use max value from range (e.g. "2-3" -> "3")
-      const maxAmount = getMaxAmount(ing.amount)
-      
+      // Scale the amount and use max value from range (e.g. "2-3" -> "3")
+      const scaledAmount = scaleAmount(ing.amount, scale)
+      const maxAmount = getMaxAmount(scaledAmount)
+
       await supabase
         .from('shopping_list')
         .insert([{
@@ -55,7 +80,7 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
     setAdding(false)
     setShowSuccess(true)
     setSelectedIngredients([])
-    
+
     setTimeout(() => {
       setShowSuccess(false)
     }, 2000)
@@ -94,7 +119,29 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
             <div className={styles.section}>
               <div className={styles.sectionHeader}>
                 <h3 className={styles.sectionTitle}>🥗 Ainesosat</h3>
-                <button 
+                <div className={styles.scaleButtons}>
+                  <button
+                    className={`${styles.scaleBtn} ${scale === 0.5 ? styles.active : ''}`}
+                    onClick={() => setScale(0.5)}
+                  >
+                    ½×
+                  </button>
+                  <button
+                    className={`${styles.scaleBtn} ${scale === 1 ? styles.active : ''}`}
+                    onClick={() => setScale(1)}
+                  >
+                    1×
+                  </button>
+                  <button
+                    className={`${styles.scaleBtn} ${scale === 2 ? styles.active : ''}`}
+                    onClick={() => setScale(2)}
+                  >
+                    2×
+                  </button>
+                </div>
+              </div>
+              <div className={styles.selectAllRow}>
+                <button
                   className={styles.selectAllBtn}
                   onClick={selectAllIngredients}
                 >
@@ -106,8 +153,9 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
                 {ingredients.map(ing => {
                   const cat = getCategoryById(ing.category)
                   const isSelected = selectedIngredients.includes(ing.id)
+                  const scaledAmount = scaleAmount(ing.amount, scale)
                   return (
-                    <div 
+                    <div
                       key={ing.id}
                       className={`${styles.ingredientItem} ${isSelected ? styles.selected : ''}`}
                       onClick={() => toggleIngredient(ing.id)}
@@ -120,9 +168,9 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
                         )}
                       </div>
                       <span className={styles.ingIcon}>{cat.icon}</span>
-                      {ing.amount && (
+                      {scaledAmount && (
                         <span className={styles.ingAmount}>
-                          {ing.amount} {ing.unit || ''}
+                          {scaledAmount} {ing.unit || ''}
                         </span>
                       )}
                       <span className={styles.ingName}>{ing.name}</span>
