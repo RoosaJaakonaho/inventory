@@ -94,7 +94,12 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
             <span className={styles.categoryIcon}>{category.icon}</span>
             <div>
               <h2 className={styles.title}>{recipe.name}</h2>
-              <span className={styles.categoryName}>{category.name}</span>
+              <div className={styles.headerMeta}>
+                <span className={styles.categoryName}>{category.name}</span>
+                {recipe.prep_time && (
+                  <span className={styles.prepTime}>⏱️ {recipe.prep_time} min</span>
+                )}
+              </div>
             </div>
           </div>
           <button className={modalStyles.closeBtn} onClick={onClose}>
@@ -111,6 +116,14 @@ export default function RecipeDetailModal({ recipe, onClose, onEdit }) {
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>📝 Ohjeet</h3>
               <p className={styles.instructions}>{recipe.instructions}</p>
+            </div>
+          )}
+
+          {/* Notes */}
+          {recipe.notes && (
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>💭 Muistiinpanot</h3>
+              <p className={styles.notes}>{recipe.notes}</p>
             </div>
           )}
 

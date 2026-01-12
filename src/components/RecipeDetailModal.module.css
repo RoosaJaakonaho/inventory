@@ -21,9 +21,20 @@
   margin-bottom: 0.125rem;
 }
 
+.headerMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .categoryName {
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+.prepTime {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .content {
@@ -93,6 +104,17 @@
   color: var(--text-secondary);
   line-height: 1.6;
   white-space: pre-wrap;
+}
+
+.notes {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  font-style: italic;
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
 }
 
 .ingredientsList {

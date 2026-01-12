@@ -14,6 +14,7 @@ export default function Recipes() {
   const [deleteRecipe, setDeleteRecipe] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
+  const [filterPrepTime, setFilterPrepTime] = useState('')
 
   useEffect(() => {
     fetchRecipes()
@@ -117,12 +118,13 @@ export default function Recipes() {
   const filteredRecipes = recipes.filter(recipe => {
     const matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = !filterCategory || recipe.category === filterCategory
-    return matchesSearch && matchesCategory
+    const matchesPrepTime = !filterPrepTime || (recipe.prep_time && recipe.prep_time <= parseInt(filterPrepTime))
+    return matchesSearch && matchesCategory && matchesPrepTime
   })
 
-  // Group recipes by first letter when showing all (no category filter)
+  // Group recipes by first letter when showing all (no filters)
   const { groupedRecipes, availableLetters } = useMemo(() => {
-    if (filterCategory || searchQuery) {
+    if (filterCategory || searchQuery || filterPrepTime) {
       return { groupedRecipes: null, availableLetters: [] }
     }
 
@@ -189,6 +191,34 @@ export default function Recipes() {
             </button>
           ))}
         </div>
+
+        <div className={styles.prepTimeTabs}>
+          <span className={styles.prepTimeLabel}>⏱️</span>
+          <button
+            className={`${styles.prepTimeTab} ${!filterPrepTime ? styles.active : ''}`}
+            onClick={() => setFilterPrepTime('')}
+          >
+            Kaikki
+          </button>
+          <button
+            className={`${styles.prepTimeTab} ${filterPrepTime === '15' ? styles.active : ''}`}
+            onClick={() => setFilterPrepTime('15')}
+          >
+            ≤15 min
+          </button>
+          <button
+            className={`${styles.prepTimeTab} ${filterPrepTime === '30' ? styles.active : ''}`}
+            onClick={() => setFilterPrepTime('30')}
+          >
+            ≤30 min
+          </button>
+          <button
+            className={`${styles.prepTimeTab} ${filterPrepTime === '60' ? styles.active : ''}`}
+            onClick={() => setFilterPrepTime('60')}
+          >
+            ≤1 h
+          </button>
+        </div>
       </div>
 
       {/* Letter jump bar */}
@@ -240,7 +270,10 @@ export default function Recipes() {
                       <div className={styles.recipeIcon}>{category.icon}</div>
                       <div className={styles.recipeInfo}>
                         <h3 className={styles.recipeName}>{recipe.name}</h3>
-                        <span className={styles.recipeCategory}>{category.name}</span>
+                        <div className={styles.recipeMeta}>
+                          <span className={styles.recipeCategory}>{category.name}</span>
+                          {recipe.prep_time && <span className={styles.recipePrepTime}>⏱️ {recipe.prep_time} min</span>}
+                        </div>
                       </div>
                       <div className={styles.recipeActions}>
                         <button
@@ -289,7 +322,10 @@ export default function Recipes() {
                   <div className={styles.recipeIcon}>{category.icon}</div>
                   <div className={styles.recipeInfo}>
                     <h3 className={styles.recipeName}>{recipe.name}</h3>
-                    <span className={styles.recipeCategory}>{category.name}</span>
+                    <div className={styles.recipeMeta}>
+                      <span className={styles.recipeCategory}>{category.name}</span>
+                      {recipe.prep_time && <span className={styles.recipePrepTime}>⏱️ {recipe.prep_time} min</span>}
+                    </div>
                   </div>
                   <div className={styles.recipeActions}>
                     <button

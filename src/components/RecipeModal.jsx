@@ -86,7 +86,9 @@ function SortableIngredient({ ingredient, index, isEditing, onEdit, onRemove }) 
 export default function RecipeModal({ recipe, onClose, onSave }) {
   const [name, setName] = useState('')
   const [category, setCategory] = useState('')
+  const [prepTime, setPrepTime] = useState('')
   const [instructions, setInstructions] = useState('')
+  const [notes, setNotes] = useState('')
   const [ingredients, setIngredients] = useState([])
   const [loading, setLoading] = useState(false)
 
@@ -113,7 +115,9 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
     if (recipe) {
       setName(recipe.name || '')
       setCategory(recipe.category || '')
+      setPrepTime(recipe.prep_time || '')
       setInstructions(recipe.instructions || '')
+      setNotes(recipe.notes || '')
       setIngredients(recipe.recipe_ingredients || [])
     }
   }, [recipe])
@@ -210,7 +214,9 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
       {
         name: name.trim(),
         category: category || null,
+        prep_time: prepTime ? parseInt(prepTime) : null,
         instructions: instructions.trim() || null,
+        notes: notes.trim() || null,
       },
       ingredients.map(ing => ({
         name: ing.name,
@@ -275,6 +281,19 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
           </div>
 
           <div className={modalStyles.field}>
+            <label className="label" htmlFor="prepTime">Valmistusaika (min)</label>
+            <input
+              id="prepTime"
+              type="number"
+              className="input"
+              value={prepTime}
+              onChange={(e) => setPrepTime(e.target.value)}
+              placeholder="esim. 30"
+              min="1"
+            />
+          </div>
+
+          <div className={modalStyles.field}>
             <label className="label" htmlFor="instructions">Ohjeet</label>
             <textarea
               id="instructions"
@@ -283,6 +302,18 @@ export default function RecipeModal({ recipe, onClose, onSave }) {
               onChange={(e) => setInstructions(e.target.value)}
               placeholder="Kirjoita ohjeet tähän..."
               rows={4}
+            />
+          </div>
+
+          <div className={modalStyles.field}>
+            <label className="label" htmlFor="notes">Muistiinpanot</label>
+            <textarea
+              id="notes"
+              className={`input ${styles.textarea}`}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Omat muistiinpanot, muutosehdotukset..."
+              rows={2}
             />
           </div>
 

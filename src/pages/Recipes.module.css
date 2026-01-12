@@ -96,6 +96,41 @@
   border-color: var(--text-primary);
 }
 
+/* Prep time filter */
+.prepTimeTabs {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.prepTimeLabel {
+  font-size: 0.875rem;
+  margin-right: 0.25rem;
+}
+
+.prepTimeTab {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.prepTimeTab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.prepTimeTab.active {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
+
 /* Letter jump bar */
 .letterBar {
   display: flex;
@@ -207,9 +242,20 @@
   margin-bottom: 0.125rem;
 }
 
+.recipeMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
 .recipeCategory {
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+.recipePrepTime {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .recipeActions {
