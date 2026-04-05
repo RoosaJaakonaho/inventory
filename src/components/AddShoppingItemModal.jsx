@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { SUB_LOCATIONS, CATEGORIES, UNITS, getSubLocationFromCategory, isInFreezer, isSpice } from '../lib/supabase'
+import DateInput from './DateInput'
 import styles from './Modal.module.css'
 
 export default function AddShoppingItemModal({ item, locationType, onClose, onSave }) {
@@ -191,12 +192,10 @@ export default function AddShoppingItemModal({ item, locationType, onClose, onSa
               {showFrozenDate && (
                 <div className={styles.field}>
                   <label className="label" htmlFor="frozenDate">Pakastuspäivä (valinnainen)</label>
-                  <input
+                  <DateInput
                     id="frozenDate"
-                    type="date"
-                    className="input"
                     value={frozenDate}
-                    onChange={(e) => setFrozenDate(e.target.value)}
+                    onChange={setFrozenDate}
                   />
                   <p className={styles.hint}>
                     🧊 Voit lisätä pakastuspäivän kaupassa tai jättää tyhjäksi
@@ -207,12 +206,10 @@ export default function AddShoppingItemModal({ item, locationType, onClose, onSa
               {showExpiryDate && (
                 <div className={styles.field}>
                   <label className="label" htmlFor="expiry">Parasta ennen (valinnainen)</label>
-                  <input
+                  <DateInput
                     id="expiry"
-                    type="date"
-                    className="input"
                     value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
+                    onChange={setExpiryDate}
                   />
                   <p className={styles.hint}>
                     📅 Voit lisätä päiväyksen kaupassa tai jättää tyhjäksi

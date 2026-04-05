@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { SUB_LOCATIONS, CATEGORIES, UNITS, isInFreezer, isSpice, getSubLocationFromCategory } from '../lib/supabase'
+import DateInput from './DateInput'
 import styles from './Modal.module.css'
 
 export default function AddItemModal({ item, locationType, onClose, onSave }) {
@@ -159,12 +160,10 @@ export default function AddItemModal({ item, locationType, onClose, onSave }) {
           {showFrozenDate && (
             <div className={styles.field}>
               <label className="label" htmlFor="frozenDate">Pakastuspäivä</label>
-              <input
+              <DateInput
                 id="frozenDate"
-                type="date"
-                className="input"
                 value={frozenDate}
-                onChange={(e) => setFrozenDate(e.target.value)}
+                onChange={setFrozenDate}
               />
               <p className={styles.hint}>
                 🧊 Vanhentuminen lasketaan automaattisesti pakastuspäivästä
@@ -175,12 +174,10 @@ export default function AddItemModal({ item, locationType, onClose, onSave }) {
           {showExpiryDate && (
             <div className={styles.field}>
               <label className="label" htmlFor="expiry">Parasta ennen</label>
-              <input
+              <DateInput
                 id="expiry"
-                type="date"
-                className="input"
                 value={expiryDate}
-                onChange={(e) => setExpiryDate(e.target.value)}
+                onChange={setExpiryDate}
               />
             </div>
           )}
